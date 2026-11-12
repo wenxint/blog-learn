@@ -18,3 +18,5 @@ frontend/dist/
 .DS_Store
 .idea/
 .vscode/
+# SQLTools 临时会话文件（每台机器各自生成）
+*.session.sql
