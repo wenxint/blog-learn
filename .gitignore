@@ -20,3 +20,6 @@ frontend/dist/
 .vscode/
 # SQLTools 临时会话文件（每台机器各自生成）
 *.session.sql
+
+# Go 编译产物目录
+backend/bin/
