@@ -39,6 +39,8 @@ func New(db *gorm.DB) *gin.Engine {
 	})
 
 	// 依赖注入：需要 db 的 handler 在这里创建
+	articleHandler := handler.NewArticleHandler(db)
+	categoryHandler := handler.NewCategoryHandler(db)
 	debugHandler := handler.NewDebugHandler(db)
 
 	// 路由分组：所有接口统一 /api/v1 前缀
@@ -48,12 +50,13 @@ func New(db *gorm.DB) *gin.Engine {
 			response.OK(c, gin.H{"pong": true})
 		})
 
-		api.GET("/articles", handler.ListArticles)
-		api.GET("/categories", handler.ListCategories)
+		api.GET("/articles", articleHandler.List)
+		api.GET("/categories", categoryHandler.List)
 
 		// 仅开发环境暴露的诊断接口
 		if os.Getenv("APP_ENV") != "prod" {
 			api.GET("/debug/db", debugHandler.DB)
+			api.GET("/debug/models", debugHandler.Models)
 			api.GET("/debug/panic", func(c *gin.Context) {
 				panic("这是一次故意的 panic，用来验证 Recovery 中间件")
 			})

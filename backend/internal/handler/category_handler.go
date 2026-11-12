@@ -1,27 +1,45 @@
 package handler
 
 import (
+	"blog/internal/model"
 	"blog/internal/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-// CategoryItem 分类列表项（第 5 课会替换成 model.Category）
-type CategoryItem struct {
-	ID           int64  `json:"id"`
-	Name         string `json:"name"`
-	Slug         string `json:"slug"`
-	Description  string `json:"description"`
-	ArticleCount int    `json:"article_count"`
+// CategoryHandler 分类接口
+type CategoryHandler struct {
+	db *gorm.DB
 }
 
-// mockCategories 假数据，article_count 与数据库种子数据一致
-var mockCategories = []CategoryItem{
-	{1, "技术笔记", "tech", "后端、前端、数据库相关的学习记录", 3},
-	{2, "生活随笔", "life", "写点日常和想法", 1},
+func NewCategoryHandler(db *gorm.DB) *CategoryHandler {
+	return &CategoryHandler{db: db}
 }
 
-// ListCategories 分类列表：GET /api/v1/categories
-func ListCategories(c *gin.Context) {
-	response.OK(c, gin.H{"list": mockCategories})
+// CategoryWithCount 分类 + 该分类下已发布文章数
+type CategoryWithCount struct {
+	model.Category
+	ArticleCount int64 `json:"article_count"`
+}
+
+// List 分类列表：GET /api/v1/categories
+func (h *CategoryHandler) List(c *gin.Context) {
+	var list []CategoryWithCount
+
+	// 用相关子查询统计文章数，避免 GROUP BY 与 ONLY_FULL_GROUP_BY 的坑
+	err := h.db.Model(&model.Category{}).
+		Select(`categories.*,
+		        (SELECT COUNT(*) FROM articles a
+		         WHERE a.category_id = categories.id
+		           AND a.status = 1
+		           AND a.deleted_at IS NULL) AS article_count`).
+		Order("categories.sort ASC, categories.id ASC").
+		Scan(&list).Error
+	if err != nil {
+		response.ServerError(c, "查询分类列表失败")
+		return
+	}
+
+	response.OK(c, gin.H{"list": list})
 }
