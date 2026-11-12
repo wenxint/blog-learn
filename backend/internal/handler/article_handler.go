@@ -1,3 +1,6 @@
+// Package handler 是 HTTP 入口：读参数、做校验、查数据、调用 response 写出 JSON。
+// 现在查询直接写在这里。按学习路线，第 7 课会把「查数据库」下沉到 repository，
+// 把「业务规则」下沉到 service，handler 只留参数和响应。
 package handler
 
 import (
@@ -8,16 +11,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// ArticleHandler 文章接口
+// ArticleHandler 文章接口。
+// 小写的 db 包外看不见，只能通过 NewArticleHandler 把数据库对象交进来。
 type ArticleHandler struct {
 	db *gorm.DB
 }
 
+// NewArticleHandler 构造函数。Go 没有 class，约定用 NewXxx 返回指针。
+// router 启动时调用一次，之后每个请求都复用同一份 handler（里面的 db 是连接池，可以并发用）。
 func NewArticleHandler(db *gorm.DB) *ArticleHandler {
 	return &ArticleHandler{db: db}
 }
 
-// ListArticleQuery 列表查询参数
+// ListArticleQuery 是网址问号后面的参数，例如 ?page=1&page_size=20&keyword=Go。
+// form:"page" 告诉 Gin：把 query 里的 page 填进 Page。
+// binding 是校验规则：omitempty 表示可以不传；gte=1 表示传了就必须 ≥ 1；lte=100 是上限。
 type ListArticleQuery struct {
 	Page       int    `form:"page" binding:"omitempty,gte=1"`
 	PageSize   int    `form:"page_size" binding:"omitempty,gte=1,lte=100"`
@@ -36,7 +44,11 @@ type PageResult struct {
 const defaultPageSize = 20
 
 // List 文章列表：GET /api/v1/articles?page=1&page_size=20&keyword=Go&category_id=1
+// (h *ArticleHandler) 表示这是 ArticleHandler 的方法。router 里写 articleHandler.List 就能注册它。
+// h 是这份 handler，c 是这一次请求。
 func (h *ArticleHandler) List(c *gin.Context) {
+	// var 声明一个零值结构体。ShouldBindQuery 按 form 标签把网址参数填进去。
+	// 传 &q 是因为函数要修改 q 本身，必须给它地址。校验失败直接 400，不再查库。
 	var q ListArticleQuery
 	if err := c.ShouldBindQuery(&q); err != nil {
 		response.InvalidParam(c, "参数错误: "+err.Error())

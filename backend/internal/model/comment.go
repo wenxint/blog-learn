@@ -22,4 +22,5 @@ type Comment struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// TableName 显式指定表名，避免依赖 GORM 的复数推导。
 func (Comment) TableName() string { return "comments" }

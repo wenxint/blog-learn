@@ -1,3 +1,9 @@
+// Package response 规定所有接口都返回同一种 JSON 外壳：
+//
+//	{"code":0,"message":"ok","data":{...}}
+//
+// HTTP 状态码（200/400/401/...）和业务码 code 同时设置。
+// 网关、浏览器看 HTTP 状态码；前端业务逻辑只认 code。
 package response
 
 import (
@@ -17,15 +23,18 @@ const (
 	CodeServerError  = 10006 // 服务器内部错误   -> 500
 )
 
-// Body 是所有接口统一的响应结构
+// Body 是所有接口统一的响应结构。
+// 反引号里的 json:"code" 叫结构体标签：c.JSON 把它转成 JSON 时用这个名字，
+// 而不是 Go 字段名 Code。前端拿到的键是小写 code。
 type Body struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
-	Data    any    `json:"data"`
+	Data    any    `json:"data"` // any 表示「任意类型」：列表、对象、null 都能放进来
 }
 
-// OK 成功响应，HTTP 200
+// OK 成功响应，HTTP 200。data 会放进 Body.Data。
 func OK(c *gin.Context, data any) {
+	// c.JSON 设置 Content-Type 并写出 JSON。StatusOK 就是数字 200，用常量避免满篇魔法数字。
 	c.JSON(http.StatusOK, Body{Code: CodeSuccess, Message: "ok", Data: data})
 }
 

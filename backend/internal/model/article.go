@@ -54,4 +54,6 @@ type Article struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+// TableName 显式指定表名。不写的话 GORM 会把 Article 推导成 articles，结果相同，
+// 写出来是为了读代码时不用去记推导规则。
 func (Article) TableName() string { return "articles" }

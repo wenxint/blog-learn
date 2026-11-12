@@ -22,6 +22,7 @@ func NewDebugHandler(db *gorm.DB) *DebugHandler {
 }
 
 // DB 数据库健康检查：GET /api/v1/debug/db
+// 只在开发环境注册。它把「连没连上、连的是哪个库、连接池忙不忙」一次返回，方便学习时核对。
 func (h *DebugHandler) DB(c *gin.Context) {
 	sqlDB, err := h.db.DB()
 	if err != nil {
@@ -37,6 +38,8 @@ func (h *DebugHandler) DB(c *gin.Context) {
 		return
 	}
 
+	// Raw 是手写 SQL。VERSION()、DATABASE() 是 MySQL 函数，GORM 的模型查询表达不了。
+	// Scan 把查出的那一格填进变量。这里忽略了 error：这是诊断接口，Ping 已经证明连得上。
 	var version string
 	var currentDB string
 	h.db.Raw("SELECT VERSION()").Scan(&version)
@@ -122,7 +125,8 @@ func (h *DebugHandler) Models(c *gin.Context) {
 	response.OK(c, gin.H{"models": out})
 }
 
-// diffSet 返回 a 里有、b 里没有的元素
+// diffSet 返回 a 里有、b 里没有的元素。用来算「模型有但表没有」和反过来的列。
+// 先把 b 放进 map，再扫 a，查找是 O(1)，避免两层循环。
 func diffSet(a, b []string) []string {
 	set := make(map[string]struct{}, len(b))
 	for _, v := range b {

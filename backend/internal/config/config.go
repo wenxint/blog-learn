@@ -1,21 +1,30 @@
+// Package config 负责把「运行配置」读进内存。
+// 配置来源有两处，优先级从高到低：
+//  1. 操作系统环境变量（部署时由系统或容器注入）
+//  2. 当前工作目录下的 .env 文件（只在本机开发用）
+//
+// 不读 .env.example。那个文件是提交到 Git 的模板，告诉别人要配哪些项；
+// 真正的密码写在 .env 里，.env 不进 Git。
 package config
 
 import (
-	"fmt"
-	"os"
-	"strconv"
-	"time"
+	"fmt"     // 拼字符串、包装错误
+	"os"      // 读文件是否存在、读环境变量
+	"strconv" // 把字符串 "50" 转成数字 50
+	"time"    // 分钟等时间类型
 
+	// 第三方库。godotenv 会把 .env 里的 KEY=VALUE 写进本进程的环境变量。
 	"github.com/joho/godotenv"
 )
 
 // Config 是应用的全部配置。启动时加载一次，之后只读，不做热更新。
+// type ... struct 是在定义一种新的数据类型，花括号里每一行是一个字段。
 type Config struct {
-	AppEnv  string // dev / prod
-	AppPort string // HTTP 监听端口
-	DB      DB
-	JWT     JWT
-	Upload  Upload
+	AppEnv  string // dev / prod，来自 APP_ENV
+	AppPort string // HTTP 监听端口，来自 APP_PORT，例如 "8090"
+	DB      DB     // 数据库相关，嵌套的另一份结构体
+	JWT     JWT    // 登录令牌相关（第 9 课才用到）
+	Upload  Upload // 图片上传相关（第 15 课才用到）
 }
 
 // DB 数据库相关配置
@@ -33,20 +42,24 @@ type DB struct {
 
 // JWT 认证配置（第 9 课使用）
 type JWT struct {
-	Secret      string
-	ExpireHours int
+	Secret      string // 签发 token 的密钥，泄露后别人就能伪造登录
+	ExpireHours int    // token 多少小时后过期
 }
 
 // Upload 文件上传配置（第 15 课使用）
 type Upload struct {
-	Dir   string
-	MaxMB int
+	Dir   string // 图片存到哪个目录
+	MaxMB int    // 单文件最大几 MB
 }
 
-// DSN 拼出 go-sql-driver/mysql 需要的连接串
+// DSN 拼出 go-sql-driver/mysql 需要的连接串。
+// (d DB) 表示这是 DB 的方法：调用时写成 cfg.DB.DSN()，d 就是那一份 DB。
+//
+// 拼出来的样子：
 //
 //	user:password@tcp(host:port)/dbname?charset=utf8mb4&parseTime=True&loc=Local
 func (d DB) DSN() string {
+	// %s 会被后面的参数按顺序替换。密码在这里是明文，只交给数据库驱动，不要打到日志里。
 	return fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local&timeout=5s&readTimeout=10s&writeTimeout=10s",
 		d.User, d.Password, d.Host, d.Port, d.Name, d.Charset,
@@ -60,17 +73,28 @@ func (d DB) SafeDSN() string {
 }
 
 // Load 读取 .env（如果存在）并组装 Config。
+// 返回值 (*Config, error) 是一对：成功时第一份是配置指针、第二份是 nil；
+// 失败时第一份是 nil、第二份是错误。调用方必须看第二份。
+//
 // 已存在的操作系统环境变量优先级高于 .env，方便临时覆盖：
 //
 //	DB_PASSWORD=wrong go run ./cmd/server
 func Load() (*Config, error) {
-	// .env 不存在不算错误：生产环境通常直接用系统环境变量
+	// os.Stat 问操作系统这个路径在不在。
+	// 它返回两个值：文件信息，以及错误。前面的 _ 表示文件信息用不到，丢掉。
+	// err == nil 才表示「文件存在并且能访问」。
+	// .env 不存在不算错误：生产环境通常不放这个文件，直接用系统环境变量。
 	if _, err := os.Stat(".env"); err == nil {
+		// 文件在，才真正解析。Load 会把 APP_PORT=8090 这类行写进环境变量。
+		// 解析失败（文件坏了、没权限）才算启动失败：return nil, 错误。
+		// fmt.Errorf 的 %w 会把原始错误包进去，外面还能用 errors.Is 认出来。
 		if err := godotenv.Load(".env"); err != nil {
 			return nil, fmt.Errorf("加载 .env 失败: %w", err)
 		}
 	}
 
+	// &Config{...} 在堆上造一份 Config，得到它的指针。
+	// 每个字段都经 getEnv 读取：环境变量有值就用它，没有就用第二个参数（默认值）。
 	cfg := &Config{
 		AppEnv:  getEnv("APP_ENV", "dev"),
 		AppPort: getEnv("APP_PORT", "8090"),
@@ -78,7 +102,7 @@ func Load() (*Config, error) {
 			Host:            getEnv("DB_HOST", "127.0.0.1"),
 			Port:            getEnv("DB_PORT", "3306"),
 			User:            getEnv("DB_USER", "blog"),
-			Password:        getEnv("DB_PASSWORD", ""),
+			Password:        getEnv("DB_PASSWORD", ""), // 密码没有安全的默认值，留空，交给下面的 validate 拒绝启动
 			Name:            getEnv("DB_NAME", "blog"),
 			Charset:         getEnv("DB_CHARSET", "utf8mb4"),
 			MaxOpenConns:    getEnvInt("DB_MAX_OPEN_CONNS", 50),
@@ -95,13 +119,15 @@ func Load() (*Config, error) {
 		},
 	}
 
+	// 缺必填项就不要返回这份配置。main 看到错误会退出，避免带着空密码跑起来。
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 	return cfg, nil
 }
 
-// validate 校验必填项：缺配置要在启动时炸掉，而不是等第一次查询才报错
+// validate 校验必填项：缺配置要在启动时炸掉，而不是等第一次查询才报错。
+// (c *Config) 表示这是 Config 指针的方法，c 就是刚组装好的那份配置。
 func (c *Config) validate() error {
 	if c.DB.Password == "" {
 		return fmt.Errorf("缺少 DB_PASSWORD，请在 .env 或环境变量中配置")
@@ -115,6 +141,9 @@ func (c *Config) validate() error {
 	return nil
 }
 
+// getEnv 读一个字符串环境变量。
+// LookupEnv 也返回两个值：变量的内容，以及「这个变量到底有没有被设置过」。
+// 没设置，或设置成空字符串，都退回 fallback。
 func getEnv(key, fallback string) string {
 	if v, ok := os.LookupEnv(key); ok && v != "" {
 		return v
@@ -122,12 +151,14 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+// getEnvInt 读一个整数环境变量。内容不是合法整数时，不报错，退回 fallback。
+// 例如 DB_MAX_OPEN_CONNS=abc 时，会安静地用默认值 50，而不是在启动阶段退出。
 func getEnvInt(key string, fallback int) int {
 	v, ok := os.LookupEnv(key)
 	if !ok || v == "" {
 		return fallback
 	}
-	n, err := strconv.Atoi(v)
+	n, err := strconv.Atoi(v) // Atoi = ASCII to integer
 	if err != nil {
 		return fallback
 	}

@@ -24,7 +24,10 @@ func RequestID() gin.HandlerFunc {
 			id = newRequestID()
 		}
 
+		// c.Set 把值放进本次请求的上下文，后面的 Logger、Recovery 用同一个 key 取出来。
+		// 这个值只活在这一次请求里，请求结束就没了，不会串到别的请求。
 		c.Set(ContextKeyRequestID, id)
+		// 同时写到响应头，调用方（浏览器、curl -i）能看到这次请求的编号。
 		c.Header(HeaderRequestID, id)
 
 		c.Next()

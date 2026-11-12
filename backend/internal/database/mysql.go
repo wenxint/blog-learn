@@ -1,3 +1,5 @@
+// Package database 负责连上 MySQL，并把连接池参数设好。
+// 业务代码拿到的是 *gorm.DB：之后的查询都从这份对象发出去，不要在别处再 Open 一次。
 package database
 
 import (
@@ -13,7 +15,9 @@ import (
 )
 
 // Connect 建立数据库连接，配置连接池，并做一次 Ping 确认真的连通。
-// 连不上直接返回 error，由 main 决定是否退出——不要在这里 os.Exit。
+// cfg 是 config.Load 交出来的那份配置，这里只用里面的 DB 和 AppEnv。
+// 连不上直接返回 error，由 main 决定是否退出——不要在这里 os.Exit，
+// 否则这个函数没法被测试，调用方也没机会打自己的日志。
 func Connect(cfg *config.Config) (*gorm.DB, error) {
 	gormCfg := &gorm.Config{
 		// dev 环境打印每条 SQL，方便学习时看到 GORM 实际发了什么
@@ -25,6 +29,8 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 		gormCfg.Logger = gormlogger.Default.LogMode(gormlogger.Info)
 	}
 
+	// gorm.Open 用 DSN 建一个 GORM 会话。这里失败通常是 DSN 格式不对，
+	// 并不代表网络已经连上——真正握手在下面的 Ping。
 	db, err := gorm.Open(mysql.Open(cfg.DB.DSN()), gormCfg)
 	if err != nil {
 		return nil, fmt.Errorf("打开数据库失败: %w", err)
@@ -52,7 +58,7 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-// Close 优雅关闭连接池
+// Close 关掉连接池里所有连接。main 在 HTTP 服务排空请求之后才调用它。
 func Close(db *gorm.DB) error {
 	sqlDB, err := db.DB()
 	if err != nil {
