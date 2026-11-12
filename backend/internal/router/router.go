@@ -2,6 +2,7 @@ package router
 
 import (
 	"os"
+	"time"
 
 	"blog/internal/handler"
 	"blog/internal/middleware"
@@ -55,6 +56,17 @@ func New(db *gorm.DB) *gin.Engine {
 			api.GET("/debug/db", debugHandler.DB)
 			api.GET("/debug/panic", func(c *gin.Context) {
 				panic("这是一次故意的 panic，用来验证 Recovery 中间件")
+			})
+			// 慢接口：用来验证优雅关闭时进行中的请求会被排空而不是被砍断
+			api.GET("/debug/slow", func(c *gin.Context) {
+				const sec = 3
+				select {
+				case <-time.After(sec * time.Second):
+					response.OK(c, gin.H{"slept_seconds": sec})
+				case <-c.Request.Context().Done():
+					// 客户端主动断开
+					return
+				}
 			})
 		}
 	}

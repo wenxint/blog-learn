@@ -8,12 +8,12 @@ MYSQL_USER ?= blog
 MYSQL_DB   ?= blog
 MYSQL      := mysql -u$(MYSQL_USER) -p $(MYSQL_DB)
 
-.PHONY: help run build vet tidy fmt clean migrate seed db
+.PHONY: help run build vet fmt tidy test test-v clean migrate seed db
 
 help: ## 显示所有命令
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*##"}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
-run: ## 启动开发服务（默认 :8090，Ctrl+C 停止）
+run: ## 启动开发服务（默认 :8090，Ctrl+C 优雅退出）
 	go run ./cmd/server
 
 build: ## 编译成单个可执行文件到 bin/
@@ -24,11 +24,17 @@ build: ## 编译成单个可执行文件到 bin/
 vet: ## 静态检查
 	go vet ./...
 
+fmt: ## 格式化代码
+	gofmt -l -w .
+
 tidy: ## 整理依赖
 	go mod tidy
 
-fmt: ## 格式化代码
-	gofmt -l -w .
+test: ## 运行单元测试
+	go test ./... -count=1
+
+test-v: ## 运行单元测试（详细输出）
+	go test ./... -count=1 -v
 
 clean: ## 清理编译产物
 	rm -rf $(BIN_DIR)
