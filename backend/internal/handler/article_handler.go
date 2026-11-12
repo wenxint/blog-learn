@@ -32,6 +32,9 @@ type PageResult struct {
 	PageSize int   `json:"page_size"`
 }
 
+// 默认分页大小
+const defaultPageSize = 20
+
 // mockArticles 假数据，字段与数据库种子数据一致
 var mockArticles = []ArticleItem{
 	{1, "Go 从零开始：第一个 HTTP 服务", "用标准库 net/http 起一个服务，理解 Handler 到底是什么。", 320, "2026-11-01 10:00:00"},
@@ -40,8 +43,8 @@ var mockArticles = []ArticleItem{
 	{4, "GORM 会用但不懂的那些事", "AutoMigrate 到底做了什么，为什么生产不建议直接用。", 89, "2026-11-10 20:00:00"},
 }
 
-// List 文章列表：GET /api/v1/articles?page=1&page_size=10&keyword=Go
-func List(c *gin.Context) {
+// ListArticles 文章列表：GET /api/v1/articles?page=1&page_size=20&keyword=Go
+func ListArticles(c *gin.Context) {
 	var q ListArticleQuery
 	if err := c.ShouldBindQuery(&q); err != nil {
 		response.InvalidParam(c, "参数错误: "+err.Error())
@@ -53,7 +56,7 @@ func List(c *gin.Context) {
 		q.Page = 1
 	}
 	if q.PageSize <= 0 {
-		q.PageSize = 10
+		q.PageSize = defaultPageSize
 	}
 
 	// 第 3 课先返回假数据，第 7 课换成真实数据库查询

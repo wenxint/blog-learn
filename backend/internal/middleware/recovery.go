@@ -12,7 +12,8 @@ import (
 // Recovery 捕获 panic，打印堆栈，返回统一的 500 JSON（而不是让连接直接断开）
 func Recovery() gin.HandlerFunc {
 	return gin.CustomRecovery(func(c *gin.Context, err any) {
-		log.Printf("[PANIC] %v\n%s", err, debug.Stack())
+		log.Printf("[PANIC] %s | %v\n%s",
+			c.GetString(ContextKeyRequestID), err, debug.Stack())
 		response.ServerError(c, "服务器内部错误")
 		c.Abort()
 	})
