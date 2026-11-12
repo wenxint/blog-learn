@@ -8,10 +8,12 @@ import (
 	"blog/internal/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // New 组装路由。main.go 只负责启动，路由配置都在这里。
-func New() *gin.Engine {
+// db 通过参数注入，handler 不直接用全局变量——这是后面分层重构的基础。
+func New(db *gorm.DB) *gin.Engine {
 	if os.Getenv("APP_ENV") == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -35,6 +37,9 @@ func New() *gin.Engine {
 		response.NotFound(c, "接口不存在: "+c.Request.Method+" "+c.Request.URL.Path)
 	})
 
+	// 依赖注入：需要 db 的 handler 在这里创建
+	debugHandler := handler.NewDebugHandler(db)
+
 	// 路由分组：所有接口统一 /api/v1 前缀
 	api := r.Group("/api/v1")
 	{
@@ -45,8 +50,9 @@ func New() *gin.Engine {
 		api.GET("/articles", handler.ListArticles)
 		api.GET("/categories", handler.ListCategories)
 
-		// 仅开发环境暴露，用于验证 panic 恢复是否生效
+		// 仅开发环境暴露的诊断接口
 		if os.Getenv("APP_ENV") != "prod" {
+			api.GET("/debug/db", debugHandler.DB)
 			api.GET("/debug/panic", func(c *gin.Context) {
 				panic("这是一次故意的 panic，用来验证 Recovery 中间件")
 			})
