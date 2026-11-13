@@ -1,0 +1,66 @@
+/* 全站基础样式：变量、重置、容器 */
+
+:root {
+  --primary: #4f7cff;
+  --primary-soft: #eef2ff;
+  --text: #1a1a1f;
+  --text-secondary: #5a5f6b;
+  --text-tertiary: #9096a3;
+  --border: #e8eaef;
+  --bg: #f7f8fb;
+  --card-bg: #ffffff;
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+}
+
+/* 页面内容统一宽度：1200px 以下自适应 */
+.container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 通用卡片 */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+  border-color: #d9deea;
+  box-shadow: 0 6px 24px rgba(23, 43, 99, 0.07);
+}
+
+/* 不太重要的说明文字 */
+.muted {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
