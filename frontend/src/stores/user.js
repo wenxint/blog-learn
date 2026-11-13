@@ -30,8 +30,13 @@ export const useUserStore = defineStore('user', () => {
       const u = await fetchProfile()
       user.value = u
       localStorage.setItem('user', JSON.stringify(u))
-    } catch {
-      logout()
+    } catch (err) {
+      // 只有「明确未授权」才清登录态。
+      // 网络抖动、后端重启、超时这类临时错误不能把用户踢出去——
+      // 否则后端一重启，所有正在操作的人都被登出，体验很差。
+      if (err?.response?.status === 401) {
+        logout()
+      }
     }
   }
 
