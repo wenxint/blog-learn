@@ -35,6 +35,15 @@ func NewArticleHandler(svc *service.ArticleService) *ArticleHandler {
 // ListArticleQuery 是网址问号后面的参数，例如 ?page=1&page_size=20&keyword=Go。
 // form:"page" 告诉 Gin：把 query 里的 page 填进 Page。
 // binding 是校验规则：omitempty 表示可以不传；gte=1 表示传了就必须 ≥ 1；lte=100 是上限。
+type AdminListArticleQuery struct {
+	pagination.Query
+
+	Keyword    string `form:"keyword" binding:"omitempty,max=50"`
+	CategoryID uint64 `form:"category_id" binding:"omitempty,gte=1"`
+	// 不传表示全部（草稿+已发布），传 0 只看草稿，传 1 只看已发布
+	Status *int8 `form:"status" binding:"omitempty,oneof=0 1"`
+}
+
 type ListArticleQuery struct {
 	// 匿名嵌入：page / page_size 两个参数和它们的默认值、上限统一由 pagination 包管理，
 	// 所有列表接口行为一致，改规则只改一处。Gin 会自动把嵌入结构体的字段一起绑定校验。
@@ -43,6 +52,8 @@ type ListArticleQuery struct {
 	Keyword    string `form:"keyword" binding:"omitempty,max=50"`
 	CategoryID uint64 `form:"category_id" binding:"omitempty,gte=1"`
 	TagID      uint64 `form:"tag_id" binding:"omitempty,gte=1"`
+	// 归档页用：?month=2026-11
+	Month string `form:"month" binding:"omitempty,len=7"`
 }
 
 // articleRequest 是「新建/编辑文章」的请求体，给前端传的 JSON 用的。
@@ -82,12 +93,13 @@ func (h *ArticleHandler) List(c *gin.Context) {
 	// 用指针是为了表达「限定已发布」和「不限状态」的区别——后台列表就不限状态。
 	published := service.StatusPublished
 	list, total, err := h.svc.List(repository.ArticleFilter{
-		Status:     &published,
-		Keyword:    q.Keyword,
-		CategoryID: q.CategoryID,
-		TagID:      q.TagID,
-		Page:       q.Page,
-		PageSize:   q.PageSize,
+		Status:         &published,
+		Keyword:        q.Keyword,
+		CategoryID:     q.CategoryID,
+		TagID:          q.TagID,
+		PublishedMonth: q.Month,
+		Page:           q.Page,
+		PageSize:       q.PageSize,
 	})
 	if err != nil {
 		fail(c, err, "查询文章列表失败")
@@ -222,4 +234,45 @@ func (h *ArticleHandler) Archives(c *gin.Context) {
 		return
 	}
 	response.OK(c, gin.H{"list": list})
+}
+
+// AdminList 后台文章列表：GET /api/v1/admin/articles
+// 与前台的区别：不过滤 status，草稿也能看到。
+func (h *ArticleHandler) AdminList(c *gin.Context) {
+	var q AdminListArticleQuery
+	if err := c.ShouldBindQuery(&q); err != nil {
+		response.InvalidParam(c, "参数错误: "+err.Error())
+		return
+	}
+	q.Normalize()
+
+	list, total, err := h.svc.List(repository.ArticleFilter{
+		Status:     q.Status, // nil = 全部
+		Keyword:    q.Keyword,
+		CategoryID: q.CategoryID,
+		Page:       q.Page,
+		PageSize:   q.PageSize,
+	})
+	if err != nil {
+		fail(c, err, "查询文章列表失败")
+		return
+	}
+
+	response.OK(c, pagination.NewResult(list, total, q.Query))
+}
+
+// AdminDetail 后台文章详情：GET /api/v1/admin/articles/:id
+// 草稿也能看，用于编辑页回填。
+func (h *ArticleHandler) AdminDetail(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	a, err := h.svc.Detail(id, false) // 不过滤状态
+	if err != nil {
+		fail(c, err, "查询文章详情失败")
+		return
+	}
+	response.OK(c, a)
 }

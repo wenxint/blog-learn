@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"blog/internal/model"
 	"blog/internal/pkg/pagination"
 	"blog/internal/pkg/response"
 	"blog/internal/service"
@@ -31,6 +32,20 @@ type commentStatusRequest struct {
 type commentListQuery struct {
 	pagination.Query
 	Status *int8 `form:"status" binding:"omitempty,oneof=0 1"`
+}
+
+// adminCommentItem 后台评论 DTO。
+//
+// 为什么不直接返回 model.Comment：
+//
+//	Comment 里 IP 标了 json:"-"，因为前台接口绝不能让访客看到别人的 IP；
+//	但后台审核恰恰需要 IP 来识别刷屏/攻击来源。
+//
+// 同一个实体满足不了两种场景，就用 DTO 单独描述「后台要哪些字段」。
+// 外层重新声明 IP 字段：内层被 json:"-" 忽略，外层会正常输出。
+type adminCommentItem struct {
+	model.Comment
+	IP string `json:"ip"`
 }
 
 // List 文章评论列表（树形）：GET /api/v1/articles/:id/comments
@@ -95,10 +110,16 @@ func (h *CommentHandler) AdminList(c *gin.Context) {
 		status = *q.Status
 	}
 
-	list, total, err := h.svc.ListByStatus(status, q.Page, q.PageSize)
+	comments, total, err := h.svc.ListByStatus(status, q.Page, q.PageSize)
 	if err != nil {
 		fail(c, err, "查询评论列表失败")
 		return
+	}
+
+	// 转成后台 DTO，把 IP 带上
+	list := make([]adminCommentItem, 0, len(comments))
+	for _, c := range comments {
+		list = append(list, adminCommentItem{Comment: c, IP: c.IP})
 	}
 
 	pending, _ := h.svc.CountPending()

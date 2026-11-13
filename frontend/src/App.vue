@@ -1,12 +1,9 @@
 <script setup>
-// App.vue 只负责「装配布局 + 渲染当前路由」。
-// 具体页面长什么样，由 views/ 下的组件决定。
-import DefaultLayout from './layouts/DefaultLayout.vue'
+// App.vue 只做一件事：渲染当前路由。
+// 布局不写在这里——前台页面套 DefaultLayout，后台页面套 AdminLayout，
+// 由路由表的嵌套结构决定（见 router/index.js）。
 </script>
 
 <template>
-  <DefaultLayout>
-    <!-- RouterView 是路由的出口：地址匹配到哪个组件，就渲染在这里 -->
-    <RouterView />
-  </DefaultLayout>
+  <RouterView />
 </template>

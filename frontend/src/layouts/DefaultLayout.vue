@@ -1,7 +1,7 @@
 <script setup>
 // 前台通用布局：头部导航 + 内容区 + 页脚。
-// 想加「后台布局」就再写一个 AdminLayout，两条路由树各用各的。
-import { RouterLink } from 'vue-router'
+// 注意这里的 RouterView：子路由（首页/详情/归档…）会渲染到 main 里。
+import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
@@ -15,17 +15,16 @@ import { RouterLink } from 'vue-router'
 
         <nav class="nav">
           <RouterLink to="/" class="nav-link">首页</RouterLink>
-          <!-- 下面这些页面后续课程再做，先占位，避免导航看起来空 -->
-          <span class="nav-link nav-link--muted">归档</span>
-          <span class="nav-link nav-link--muted">标签</span>
-          <span class="nav-link nav-link--muted">关于</span>
+          <RouterLink to="/archive" class="nav-link">归档</RouterLink>
+          <RouterLink to="/tags" class="nav-link">标签</RouterLink>
+          <RouterLink to="/about" class="nav-link">关于</RouterLink>
+          <RouterLink to="/admin" class="nav-link nav-link--admin">后台</RouterLink>
         </nav>
       </div>
     </header>
 
     <main class="site-main">
-      <!-- slot 是「占位插槽」：App.vue 里放进去的 RouterView 会填到这里 -->
-      <slot />
+      <RouterView />
     </main>
 
     <footer class="site-footer">
@@ -83,6 +82,7 @@ import { RouterLink } from 'vue-router'
 .nav {
   display: flex;
   gap: 22px;
+  align-items: center;
 }
 
 .nav-link {
@@ -101,9 +101,11 @@ import { RouterLink } from 'vue-router'
   font-weight: 600;
 }
 
-.nav-link--muted {
-  cursor: not-allowed;
-  opacity: 0.45;
+.nav-link--admin {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
 }
 
 .site-main {

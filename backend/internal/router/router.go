@@ -140,6 +140,10 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager, uploadSvc *service.UploadService) *gi
 		{
 			// POST / PUT / DELETE 是「有副作用」的请求：
 			// 浏览器地址栏访问不到，必须用表单、fetch 或 curl -X 指定。
+			// 后台文章列表/详情：草稿也能看到
+			admin.GET("/articles", articleHandler.AdminList)
+			admin.GET("/articles/:id", articleHandler.AdminDetail)
+
 			// 图片上传：需要登录（author 也能传，写文章时要配图）
 			admin.POST("/upload", uploadHandler.Upload)
 

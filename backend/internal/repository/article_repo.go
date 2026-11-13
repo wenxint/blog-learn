@@ -30,8 +30,10 @@ type ArticleFilter struct {
 	Keyword    string
 	CategoryID uint64
 	TagID      uint64
-	Page       int
-	PageSize   int
+	// PublishedMonth 形如 "2026-11"，用于归档页按月筛选
+	PublishedMonth string
+	Page           int
+	PageSize       int
 }
 
 // build 每次返回一个干净的链式对象。
@@ -47,6 +49,12 @@ func (r *ArticleRepository) build(f ArticleFilter) *gorm.DB {
 	}
 	if f.CategoryID > 0 {
 		d = d.Where("category_id = ?", f.CategoryID)
+	}
+	if f.PublishedMonth != "" {
+		// 用 DATE_FORMAT 匹配年月。注意这会让 idx_status_published 的
+		// published_at 部分失效（函数包住列无法走索引），
+		// 数据量大时应改成 published_at >= 月初 AND published_at < 下月初
+		d = d.Where("DATE_FORMAT(published_at, '%Y-%m') = ?", f.PublishedMonth)
 	}
 	if f.TagID > 0 {
 		// 子查询：先找出打了这个标签的文章 id

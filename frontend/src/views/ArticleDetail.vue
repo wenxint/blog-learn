@@ -1,10 +1,13 @@
 <script setup>
 // 文章详情页：正文 + 评论
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElTag, ElInput, ElButton, ElMessage, ElSkeleton, ElEmpty } from 'element-plus'
 import { createComment, fetchArticleDetail, fetchComments } from '../api/article'
 import { formatDate } from '../utils/format'
+import { renderMarkdown } from '../utils/markdown'
+// 代码高亮主题（github 风格浅色）
+import 'highlight.js/styles/github.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +17,10 @@ const comments = ref([])
 const loading = ref(true)
 const submitting = ref(false)
 const form = ref({ nickname: '', email: '', content: '' })
+
+// Markdown → 净化后的 HTML。
+// 用 computed：article 变化时自动重算，不用手动维护一份 html 状态。
+const contentHtml = computed(() => renderMarkdown(article.value?.content || ''))
 
 async function load() {
   loading.value = true
@@ -79,10 +86,10 @@ onMounted(load)
 
         <div class="article-body">
           <!--
-            第 18 课会换成 marked + highlight.js 渲染真正的 Markdown。
-            现在先用 pre-wrap 保留换行，让内容可读即可。
+            v-html 会把字符串当成 HTML 插入，所以内容必须先过 DOMPurify 净化
+            （见 utils/markdown.js），否则作者可以注入 <script> 偷用户 token。
           -->
-          <pre class="article-content">{{ article.content }}</pre>
+          <div class="markdown-body" v-html="contentHtml"></div>
         </div>
 
         <div v-if="(article.tags || []).length" class="article-tags">
@@ -202,14 +209,119 @@ onMounted(load)
   margin: 26px 0;
 }
 
-.article-content {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: inherit;
+.markdown-body {
   font-size: 15.5px;
   line-height: 1.85;
   color: var(--text);
+  word-break: break-word;
+}
+
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3) {
+  margin: 1.6em 0 0.6em;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.markdown-body :deep(h1) {
+  font-size: 24px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown-body :deep(h2) {
+  font-size: 20px;
+}
+
+.markdown-body :deep(h3) {
+  font-size: 17px;
+}
+
+.markdown-body :deep(p) {
+  margin: 0 0 1em;
+}
+
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
+  padding-left: 1.4em;
+  margin: 0 0 1em;
+}
+
+.markdown-body :deep(li) {
+  margin: 0.25em 0;
+}
+
+.markdown-body :deep(a) {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.markdown-body :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.markdown-body :deep(blockquote) {
+  margin: 1em 0;
+  padding: 10px 16px;
+  border-left: 3px solid #c9d3ea;
+  background: #f8f9fc;
+  color: var(--text-secondary);
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-body :deep(code) {
+  background: #f2f4f8;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.9em;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.markdown-body :deep(pre) {
+  margin: 1.2em 0;
+  padding: 16px 18px;
+  background: #f8f9fc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.markdown-body :deep(pre code) {
+  background: transparent;
+  padding: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 14px;
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body :deep(th) {
+  background: #f8f9fc;
+  font-weight: 600;
+}
+
+.markdown-body :deep(img) {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.markdown-body :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
 }
 
 .article-tags {

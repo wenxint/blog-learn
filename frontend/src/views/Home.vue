@@ -1,9 +1,13 @@
 <script setup>
 // 首页：文章列表 + 分类筛选 + 搜索 + 分页
-import { onMounted, ref, watch } from 'vue'
-import { ElSkeleton, ElPagination, ElInput, ElTag, ElEmpty } from 'element-plus'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElSkeleton, ElPagination, ElInput, ElTag, ElEmpty, ElButton } from 'element-plus'
 import { fetchArticles, fetchCategories } from '../api/article'
 import { formatDate } from '../utils/format'
+
+const route = useRoute()
+const router = useRouter()
 
 const articles = ref([])
 const categories = ref([])
@@ -12,10 +16,34 @@ const page = ref(1)
 const pageSize = ref(10)
 const keyword = ref('')
 const categoryId = ref(0)
+const tagId = ref(0)
+const month = ref('')
+const tagName = ref('')
 const loading = ref(false)
 
-// 加载文章列表。所有筛选条件都作为 query 传给后端，
-// 分页/搜索/筛选全部由数据库完成，前端不做本地过滤。
+// 从地址栏读取筛选条件。
+// 归档页/标签页跳过来时会带 ?month=2026-11 或 ?tag_id=2，
+// 这样筛选状态可以分享、刷新不丢。
+function syncFromQuery() {
+  const q = route.query
+  categoryId.value = Number(q.category_id) || 0
+  tagId.value = Number(q.tag_id) || 0
+  month.value = q.month || ''
+  keyword.value = q.keyword || ''
+  tagName.value = q.tag_name || ''
+}
+
+// 把当前筛选同步回地址栏（用 replace，避免每次筛选都往历史里塞一条）
+function syncToQuery() {
+  const query = {}
+  if (categoryId.value) query.category_id = categoryId.value
+  if (tagId.value) query.tag_id = tagId.value
+  if (month.value) query.month = month.value
+  if (keyword.value) query.keyword = keyword.value
+  if (tagName.value) query.tag_name = tagName.value
+  router.replace({ path: '/', query })
+}
+
 async function loadArticles() {
   loading.value = true
   try {
@@ -24,6 +52,8 @@ async function loadArticles() {
       page_size: pageSize.value,
       keyword: keyword.value || undefined,
       category_id: categoryId.value || undefined,
+      tag_id: tagId.value || undefined,
+      month: month.value || undefined,
     })
     articles.value = data.list || []
     total.value = data.total || 0
@@ -37,16 +67,40 @@ async function loadCategories() {
   categories.value = data.list || []
 }
 
-// 切换分类 / 搜索时回到第 1 页，否则会出现「第 5 页没有数据」
+// 切换筛选条件时回到第 1 页，否则会出现「第 5 页没有数据」
+// 这里不直接 syncToQuery：watch 里改 URL 再触发 watch 会绕圈
 function resetAndLoad() {
   page.value = 1
   loadArticles()
 }
 
-watch([keyword, categoryId], resetAndLoad)
+watch([keyword, categoryId], () => {
+  tagId.value = 0
+  tagName.value = ''
+  month.value = ''
+  resetAndLoad()
+  syncToQuery()
+})
+
 watch(page, loadArticles)
 
+// 清掉所有筛选（标签页/归档页跳过来时用得上）
+function clearFilters() {
+  categoryId.value = 0
+  tagId.value = 0
+  month.value = ''
+  keyword.value = ''
+  tagName.value = ''
+  resetAndLoad()
+  syncToQuery()
+}
+
+const hasFilter = computed(
+  () => categoryId.value || tagId.value || month.value || keyword.value,
+)
+
 onMounted(() => {
+  syncFromQuery()
   loadArticles()
   loadCategories()
 })
@@ -54,21 +108,26 @@ onMounted(() => {
 
 <template>
   <div class="container">
-    <!-- 顶部介绍 -->
     <section class="hero">
       <h1 class="hero-title">记录学习后端的过程</h1>
       <p class="hero-sub">Go · MySQL · Vue3 —— 从零手搓一个博客，边做边写。</p>
     </section>
 
-    <!-- 筛选栏 -->
+    <!-- 当前生效的筛选条件（从归档/标签页跳过来时显示） -->
+    <div v-if="hasFilter" class="active-filters">
+      <span class="muted">当前筛选：</span>
+      <ElTag v-if="month" type="warning" effect="plain" size="small">{{ month }}</ElTag>
+      <ElTag v-if="tagName || tagId" type="info" effect="plain" size="small">
+        标签：{{ tagName || `#${tagId}` }}
+      </ElTag>
+      <ElTag v-if="keyword" effect="plain" size="small">关键词：{{ keyword }}</ElTag>
+      <ElButton link type="primary" size="small" @click="clearFilters">清除</ElButton>
+    </div>
+
     <section class="filters">
       <div class="filter-group">
-        <button
-          class="chip"
-          :class="{ 'chip--active': categoryId === 0 }"
-          @click="categoryId = 0"
-        >
-          全部 {{ categoryId === 0 ? `(${total})` : '' }}
+        <button class="chip" :class="{ 'chip--active': categoryId === 0 }" @click="categoryId = 0">
+          全部
         </button>
         <button
           v-for="cat in categories"
@@ -82,15 +141,9 @@ onMounted(() => {
         </button>
       </div>
 
-      <ElInput
-        v-model="keyword"
-        placeholder="搜索文章标题…"
-        clearable
-        class="search"
-      />
+      <ElInput v-model="keyword" placeholder="搜索文章标题…" clearable class="search" />
     </section>
 
-    <!-- 列表 -->
     <ElSkeleton v-if="loading" :rows="4" animated class="skeleton" />
 
     <template v-else>
@@ -158,6 +211,14 @@ onMounted(() => {
 .hero-sub {
   margin: 0;
   color: var(--text-secondary);
+}
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
 .filters {
