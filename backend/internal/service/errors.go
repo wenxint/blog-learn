@@ -11,6 +11,8 @@ import (
 var (
 	ErrNotFound     = errors.New("资源不存在")
 	ErrInvalidInput = errors.New("参数不合法")
+	ErrUnauthorized = errors.New("认证失败")
+	ErrConflict     = errors.New("资源冲突")
 )
 
 // IsNotFound 判断是否是「找不到」类错误

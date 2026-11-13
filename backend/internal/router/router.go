@@ -8,6 +8,7 @@ import (
 
 	"blog/internal/handler"
 	"blog/internal/middleware"
+	"blog/internal/pkg/jwt"
 	"blog/internal/pkg/response"
 	"blog/internal/repository"
 	"blog/internal/service"
@@ -19,7 +20,8 @@ import (
 // New 组装路由，返回 Gin 引擎。main 把它塞进 http.Server 的 Handler 字段。
 // db 通过参数传进来，handler 不自己去连数据库，也不用全局变量。
 // 这样换一个数据库对象（比如测试里的）时，不用改 handler 内部。
-func New(db *gorm.DB) *gin.Engine {
+// jwtMgr 同理：中间件需要它验签，但 middleware 包不该自己去读配置。
+func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
 	// 生产模式关掉 Gin 的调试路由打印。开发环境保持默认的 DebugMode。
 	if os.Getenv("APP_ENV") == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -59,6 +61,10 @@ func New(db *gorm.DB) *gin.Engine {
 	articleHandler := handler.NewArticleHandler(articleSvc)
 
 	// 还没分层的 handler：仍然直接用 db（category、debug 属于查看类，暂不重构）
+	userRepo := repository.NewUserRepository(db)
+	authSvc := service.NewAuthService(db, userRepo, jwtMgr)
+	authHandler := handler.NewAuthHandler(authSvc)
+
 	categoryHandler := handler.NewCategoryHandler(db)
 	debugHandler := handler.NewDebugHandler(db)
 
@@ -79,17 +85,33 @@ func New(db *gorm.DB) *gin.Engine {
 		api.GET("/articles/:id", articleHandler.Detail)
 		api.GET("/categories", categoryHandler.List)
 
+		// 认证接口。分组前缀 /api/v1/auth。
+		// register / login 必须公开：用户还没登录，哪来的 token。
+		// profile / password 需要登录：在单个路由上挂 AuthRequired 中间件，
+		// 这样比再开一个 group 更直观——看这一行就知道它要不要登录。
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.GET("/profile", middleware.AuthRequired(jwtMgr), authHandler.Profile)
+			auth.PUT("/password", middleware.AuthRequired(jwtMgr), authHandler.ChangePassword)
+		}
+
 		// 后台写接口。
 		// Group("/admin") 相当于给里面所有路由再加一段前缀 /api/v1/admin。
 		// 单独分组的意义：第 10 课会给这个组整体挂上 JWT 鉴权中间件，
 		// 一行代码就能保护组内所有接口，不用逐个加。
 		admin := api.Group("/admin")
+		// 整个后台组统一挂鉴权：组内每个接口都必须带 Bearer token。
+		// 写在一处而不是逐个加，就不会出现「新加了接口忘记鉴权」这种低级漏洞。
+		admin.Use(middleware.AuthRequired(jwtMgr))
 		{
 			// POST / PUT / DELETE 是「有副作用」的请求：
 			// 浏览器地址栏访问不到，必须用表单、fetch 或 curl -X 指定。
 			admin.POST("/articles", articleHandler.Create)
 			admin.PUT("/articles/:id", articleHandler.Update)
-			admin.DELETE("/articles/:id", articleHandler.Delete)
+			// 删除是危险操作，额外要求 admin 角色（author 只能写，不能删）
+			admin.DELETE("/articles/:id", middleware.AdminOnly(), articleHandler.Delete)
 		}
 
 		// 仅开发环境暴露的诊断接口

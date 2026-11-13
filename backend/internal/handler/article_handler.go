@@ -9,10 +9,9 @@
 package handler
 
 import (
-	"errors"
-	"log"
 	"strconv"
 
+	"blog/internal/pkg/authctx"
 	"blog/internal/pkg/response"
 	"blog/internal/repository"
 	"blog/internal/service"
@@ -103,7 +102,7 @@ func (h *ArticleHandler) List(c *gin.Context) {
 		PageSize:   q.PageSize,
 	})
 	if err != nil {
-		h.fail(c, err, "查询文章列表失败")
+		fail(c, err, "查询文章列表失败")
 		return
 	}
 
@@ -121,7 +120,7 @@ func (h *ArticleHandler) Detail(c *gin.Context) {
 	// 第二个参数 true：前台访问，草稿返回 404（不告诉调用方「存在但没发布」）
 	a, err := h.svc.Detail(id, true)
 	if err != nil {
-		h.fail(c, err, "查询文章详情失败")
+		fail(c, err, "查询文章详情失败")
 		return
 	}
 	response.OK(c, a)
@@ -136,9 +135,9 @@ func (h *ArticleHandler) Create(c *gin.Context) {
 		return
 	}
 
-	a, err := h.svc.Create(toInput(req))
+	a, err := h.svc.Create(toInput(req, authctx.UserID(c)))
 	if err != nil {
-		h.fail(c, err, "创建文章失败")
+		fail(c, err, "创建文章失败")
 		return
 	}
 	response.OK(c, a)
@@ -159,9 +158,9 @@ func (h *ArticleHandler) Update(c *gin.Context) {
 		return
 	}
 
-	a, err := h.svc.Update(id, toInput(req))
+	a, err := h.svc.Update(id, toInput(req, authctx.UserID(c)))
 	if err != nil {
-		h.fail(c, err, "更新文章失败")
+		fail(c, err, "更新文章失败")
 		return
 	}
 	response.OK(c, a)
@@ -176,7 +175,7 @@ func (h *ArticleHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.svc.Delete(id); err != nil {
-		h.fail(c, err, "删除文章失败")
+		fail(c, err, "删除文章失败")
 		return
 	}
 	response.OK(c, gin.H{"id": id, "deleted": true})
@@ -186,7 +185,7 @@ func (h *ArticleHandler) Delete(c *gin.Context) {
 
 // toInput 把 HTTP 请求体（DTO）转成 service 的入参。
 // 这层转换看着多余，其实是在隔离「接口契约」和「业务模型」：以后前端字段改名，只改这里。
-func toInput(req articleRequest) service.ArticleInput {
+func toInput(req articleRequest, currentUserID uint64) service.ArticleInput {
 	status := service.StatusDraft
 	if req.Status != nil {
 		status = *req.Status
@@ -195,9 +194,10 @@ func toInput(req articleRequest) service.ArticleInput {
 	if req.IsTop != nil {
 		isTop = *req.IsTop
 	}
-	authorID := req.AuthorID
+	// 作者优先取 token 里的当前用户，防止前端伪造 author_id 冒充别人发文
+	authorID := currentUserID
 	if authorID == 0 {
-		authorID = 1 // 第 10 课接入 JWT 后会改成「当前登录用户」
+		authorID = req.AuthorID // 未登录时（理论上已被中间件拦住）兜底
 	}
 
 	return service.ArticleInput{
@@ -223,20 +223,4 @@ func parseID(c *gin.Context) (uint64, bool) {
 		return 0, false
 	}
 	return id, true
-}
-
-// fail 把 service 的错误翻译成 HTTP 响应。
-// 业务错误（NotFound / InvalidInput）原样返回给前端，因为那是用户能看懂、能改的；
-// 其他错误（数据库挂了等）只回一句笼统的话，细节写进日志——
-// 否则会把内部结构（表名、字段名、SQL）暴露给外部，等于给攻击者送情报。
-func (h *ArticleHandler) fail(c *gin.Context, err error, fallback string) {
-	switch {
-	case errors.Is(err, service.ErrNotFound):
-		response.NotFound(c, err.Error())
-	case errors.Is(err, service.ErrInvalidInput):
-		response.InvalidParam(c, err.Error())
-	default:
-		log.Printf("[ERROR] %s: %v", fallback, err)
-		response.ServerError(c, fallback)
-	}
 }

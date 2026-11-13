@@ -20,6 +20,7 @@ import (
 	// config 是包名，不是变量。
 	"blog/internal/config"
 	"blog/internal/database"
+	"blog/internal/pkg/jwt"
 	"blog/internal/router"
 )
 
@@ -43,13 +44,18 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 
-	// 3. 组装 HTTP Server
+	// 3. 创建 JWT 管理器
+	// 密钥和有效期来自 .env 的 JWT_SECRET / JWT_EXPIRE_HOURS。
+	// 只创建一次，路由里的鉴权中间件和 auth service 共用同一个对象。
+	jwtMgr := jwt.NewManager(cfg.JWT.Secret, cfg.JWT.ExpireHours)
+
+	// 4. 组装 HTTP Server
 	// 不直接用 r.Run()：它内部固定了一个没有超时的 http.Server，
 	// 也没法优雅关闭。这里自己控制。
 	// & 是取地址，得到指针。http.Server 是标准库里的结构体，下面按字段名填值。
 	srv := &http.Server{
-		Addr:    ":" + cfg.AppPort, // AppPort 来自 .env 的 APP_PORT，例如 "8090"，拼成监听地址 ":8090"
-		Handler: router.New(db),    // 真正按网址分发请求的是 router 组装好的 Gin
+		Addr:    ":" + cfg.AppPort,      // AppPort 来自 .env 的 APP_PORT，例如 "8090"，拼成监听地址 ":8090"
+		Handler: router.New(db, jwtMgr), // 真正按网址分发请求的是 router 组装好的 Gin
 		// 防止慢连接耗尽资源（Slowloris 攻击）
 		ReadHeaderTimeout: 5 * time.Second,  // 读完请求头的最长时间
 		ReadTimeout:       15 * time.Second, // 读完整个请求（含 body）的最长时间
