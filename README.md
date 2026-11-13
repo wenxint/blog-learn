@@ -2,10 +2,13 @@
 
 一个边学边写的博客系统：后端从零用 Go 写，前端用 Vue3 做。
 
-- 后端：Go 1.26 · Gin · GORM · MySQL 8.4 · JWT
-- 前端：Vue 3 · Vite · Pinia · Vue Router · Element Plus · Axios
-- 架构与学习路线：[docs/00-架构总览.md](docs/00-架构总览.md) · [docs/01-学习路线图.md](docs/01-学习路线图.md)
-- 踩坑记录：[docs/notes/踩坑记录.md](docs/notes/踩坑记录.md)
+- 后端：Go 1.26 · Gin · GORM · MySQL 8.4 · JWT（34 个接口、19 个单测）
+- 前端：Vue 3 · Vite · Pinia · Vue Router · Element Plus（前台 6 页 + 后台 5 页）
+- 架构总览（as-built）：[docs/00-架构总览.md](docs/00-架构总览.md)
+- 接口文档：[docs/02-接口文档.md](docs/02-接口文档.md)
+- 学习路线（20 课进度与要点）：[docs/01-学习路线图.md](docs/01-学习路线图.md)
+- 笔记目录：[docs/notes/README.md](docs/notes/README.md)
+  - [踩坑记录](docs/notes/踩坑记录.md) · [后端速查](docs/notes/后端速查.md) · [前端速查](docs/notes/前端速查.md) · [自测题](docs/notes/自测题.md)
 
 ---
 
