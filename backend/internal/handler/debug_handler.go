@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"sort"
 	"time"
 
@@ -88,6 +89,7 @@ func (h *DebugHandler) Models(c *gin.Context) {
 		&model.Tag{},
 		&model.Article{},
 		&model.Comment{},
+		&model.ArticleTag{},
 	}
 
 	out := make([]ModelCheck, 0, len(samples))
@@ -140,4 +142,42 @@ func diffSet(a, b []string) []string {
 	}
 	sort.Strings(res)
 	return res
+}
+
+// TxRollback 验证事务回滚：GET /api/v1/debug/tx-rollback
+//
+// 在一个事务里创建文章，然后故意返回错误。
+// 如果事务生效，这篇文章不应该留在数据库里。
+func (h *DebugHandler) TxRollback(c *gin.Context) {
+	const title = "__tutorial_tx_demo__"
+
+	// 先清理上次演示可能残留的数据（Unscoped 表示连软删除的一起硬删）
+	h.db.Unscoped().Where("title = ?", title).Delete(&model.Article{})
+
+	var before int64
+	h.db.Model(&model.Article{}).Unscoped().Where("title = ?", title).Count(&before)
+
+	txErr := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&model.Article{
+			Title:    title,
+			Content:  "这条数据不该被提交",
+			Status:   0,
+			AuthorID: 1,
+		}).Error; err != nil {
+			return err
+		}
+		// 故意失败，触发回滚
+		return errors.New("故意返回错误，验证事务回滚")
+	})
+
+	var after int64
+	h.db.Model(&model.Article{}).Unscoped().Where("title = ?", title).Count(&after)
+
+	response.OK(c, gin.H{
+		"before":      before,
+		"after":       after,
+		"rolled_back": txErr != nil && after == before,
+		"tx_error":    txErr.Error(),
+		"note":        "after 应与 before 相同（都是 0），说明事务里的插入被回滚了",
+	})
 }

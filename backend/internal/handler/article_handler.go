@@ -1,39 +1,50 @@
-// Package handler 是 HTTP 入口：读参数、做校验、查数据、调用 response 写出 JSON。
-// 现在查询直接写在这里。按学习路线，第 7 课会把「查数据库」下沉到 repository，
-// 把「业务规则」下沉到 service，handler 只留参数和响应。
 package handler
 
 import (
-	"blog/internal/model"
+	"errors"
+	"log"
+	"strconv"
+
 	"blog/internal/pkg/response"
+	"blog/internal/repository"
+	"blog/internal/service"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-// ArticleHandler 文章接口。
-// 小写的 db 包外看不见，只能通过 NewArticleHandler 把数据库对象交进来。
+// ArticleHandler 只做 HTTP 相关的事：解析参数、调 service、组装响应、翻译错误。
 type ArticleHandler struct {
-	db *gorm.DB
+	svc *service.ArticleService
 }
 
-// NewArticleHandler 构造函数。Go 没有 class，约定用 NewXxx 返回指针。
-// router 启动时调用一次，之后每个请求都复用同一份 handler（里面的 db 是连接池，可以并发用）。
-func NewArticleHandler(db *gorm.DB) *ArticleHandler {
-	return &ArticleHandler{db: db}
+func NewArticleHandler(svc *service.ArticleService) *ArticleHandler {
+	return &ArticleHandler{svc: svc}
 }
 
-// ListArticleQuery 是网址问号后面的参数，例如 ?page=1&page_size=20&keyword=Go。
-// form:"page" 告诉 Gin：把 query 里的 page 填进 Page。
-// binding 是校验规则：omitempty 表示可以不传；gte=1 表示传了就必须 ≥ 1；lte=100 是上限。
+// ListArticleQuery 列表查询参数
 type ListArticleQuery struct {
 	Page       int    `form:"page" binding:"omitempty,gte=1"`
 	PageSize   int    `form:"page_size" binding:"omitempty,gte=1,lte=100"`
 	Keyword    string `form:"keyword" binding:"omitempty,max=50"`
 	CategoryID uint64 `form:"category_id" binding:"omitempty,gte=1"`
+	TagID      uint64 `form:"tag_id" binding:"omitempty,gte=1"`
 }
 
-// PageResult 分页结果（第 11 课会抽到 pkg/pagination）
+// articleRequest 创建/编辑的请求体（DTO）。
+// 特意不直接用 model.Article：避免前端能改 id、created_at、view_count 这些字段。
+type articleRequest struct {
+	Title      string   `json:"title" binding:"required,max=200"`
+	Summary    string   `json:"summary" binding:"omitempty,max=500"`
+	Content    string   `json:"content" binding:"required"`
+	Cover      string   `json:"cover" binding:"omitempty,max=255"`
+	Status     *int8    `json:"status" binding:"omitempty,oneof=0 1"`
+	IsTop      *int8    `json:"is_top" binding:"omitempty,oneof=0 1"`
+	AuthorID   uint64   `json:"author_id"`
+	CategoryID uint64   `json:"category_id"`
+	TagIDs     []uint64 `json:"tag_ids"`
+}
+
+// PageResult 分页结果
 type PageResult struct {
 	List     any   `json:"list"`
 	Total    int64 `json:"total"`
@@ -43,12 +54,8 @@ type PageResult struct {
 
 const defaultPageSize = 20
 
-// List 文章列表：GET /api/v1/articles?page=1&page_size=20&keyword=Go&category_id=1
-// (h *ArticleHandler) 表示这是 ArticleHandler 的方法。router 里写 articleHandler.List 就能注册它。
-// h 是这份 handler，c 是这一次请求。
+// List 文章列表：GET /api/v1/articles
 func (h *ArticleHandler) List(c *gin.Context) {
-	// var 声明一个零值结构体。ShouldBindQuery 按 form 标签把网址参数填进去。
-	// 传 &q 是因为函数要修改 q 本身，必须给它地址。校验失败直接 400，不再查库。
 	var q ListArticleQuery
 	if err := c.ShouldBindQuery(&q); err != nil {
 		response.InvalidParam(c, "参数错误: "+err.Error())
@@ -61,48 +68,142 @@ func (h *ArticleHandler) List(c *gin.Context) {
 		q.PageSize = defaultPageSize
 	}
 
-	// 把查询条件封装成函数，每次调用返回一个干净的链式对象。
-	// 重要：*gorm.DB 的链式调用是有状态的，同一个对象复用会把条件串在一起
-	//（比如 Count 之后再 Find，条件会叠加两次），所以必须每次重建。
-	base := func() *gorm.DB {
-		d := h.db.Model(&model.Article{}).Where("status = ?", 1) // 只查已发布
-		if q.Keyword != "" {
-			d = d.Where("title LIKE ?", "%"+q.Keyword+"%")
-		}
-		if q.CategoryID > 0 {
-			d = d.Where("category_id = ?", q.CategoryID)
-		}
-		return d
-	}
-
-	var total int64
-	if err := base().Count(&total).Error; err != nil {
-		response.ServerError(c, "查询文章总数失败")
-		return
-	}
-
-	var list []model.Article
-	err := base().
-		// 列表不返回正文（longtext 很大），详情接口才查
-		Select("id", "title", "summary", "cover", "status", "is_top",
-			"view_count", "like_count", "author_id", "category_id",
-					"published_at", "created_at").
-		Preload("Category"). // 预加载关联：另外发两条 SQL，避免 N+1
-		Preload("Author").
-		Preload("Tags").
-		Order("is_top DESC, published_at DESC").
-		Limit(q.PageSize).
-		Offset((q.Page - 1) * q.PageSize).
-		Find(&list).Error
-	if err != nil {
-		response.ServerError(c, "查询文章列表失败")
-		return
-	}
-
-	response.OK(c, PageResult{
-		List:     list,
-		Total:    total,
-		Page:     q.Page,
-		PageSize: q.PageSize,
+	// 前台只展示已发布
+	published := service.StatusPublished
+	list, total, err := h.svc.List(repository.ArticleFilter{
+		Status:     &published,
+		Keyword:    q.Keyword,
+		CategoryID: q.CategoryID,
+		TagID:      q.TagID,
+		Page:       q.Page,
+		PageSize:   q.PageSize,
 	})
+	if err != nil {
+		h.fail(c, err, "查询文章列表失败")
+		return
+	}
+
+	response.OK(c, PageResult{List: list, Total: total, Page: q.Page, PageSize: q.PageSize})
+}
+
+// Detail 文章详情：GET /api/v1/articles/:id
+func (h *ArticleHandler) Detail(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	a, err := h.svc.Detail(id, true) // 前台：草稿不可见
+	if err != nil {
+		h.fail(c, err, "查询文章详情失败")
+		return
+	}
+	response.OK(c, a)
+}
+
+// Create 新建文章：POST /api/v1/admin/articles
+func (h *ArticleHandler) Create(c *gin.Context) {
+	var req articleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.InvalidParam(c, "请求体错误: "+err.Error())
+		return
+	}
+
+	a, err := h.svc.Create(toInput(req))
+	if err != nil {
+		h.fail(c, err, "创建文章失败")
+		return
+	}
+	response.OK(c, a)
+}
+
+// Update 编辑文章：PUT /api/v1/admin/articles/:id
+func (h *ArticleHandler) Update(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	var req articleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.InvalidParam(c, "请求体错误: "+err.Error())
+		return
+	}
+
+	a, err := h.svc.Update(id, toInput(req))
+	if err != nil {
+		h.fail(c, err, "更新文章失败")
+		return
+	}
+	response.OK(c, a)
+}
+
+// Delete 删除文章（软删除）：DELETE /api/v1/admin/articles/:id
+func (h *ArticleHandler) Delete(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.svc.Delete(id); err != nil {
+		h.fail(c, err, "删除文章失败")
+		return
+	}
+	response.OK(c, gin.H{"id": id, "deleted": true})
+}
+
+// ---------- 内部辅助 ----------
+
+// toInput DTO -> service 入参
+func toInput(req articleRequest) service.ArticleInput {
+	status := service.StatusDraft
+	if req.Status != nil {
+		status = *req.Status
+	}
+	var isTop int8
+	if req.IsTop != nil {
+		isTop = *req.IsTop
+	}
+	authorID := req.AuthorID
+	if authorID == 0 {
+		authorID = 1 // 第 10 课接入 JWT 后会改成「当前登录用户」
+	}
+
+	return service.ArticleInput{
+		Title:      req.Title,
+		Summary:    req.Summary,
+		Content:    req.Content,
+		Cover:      req.Cover,
+		Status:     status,
+		IsTop:      isTop,
+		AuthorID:   authorID,
+		CategoryID: req.CategoryID,
+		TagIDs:     req.TagIDs,
+	}
+}
+
+// parseID 解析路径参数 :id，失败时直接写 400 响应
+func parseID(c *gin.Context) (uint64, bool) {
+	raw := c.Param("id")
+	id, err := strconv.ParseUint(raw, 10, 64)
+	if err != nil || id == 0 {
+		response.InvalidParam(c, "id 必须是正整数: "+raw)
+		return 0, false
+	}
+	return id, true
+}
+
+// fail 把 service 的错误翻译成 HTTP 响应。
+// 业务错误（NotFound / InvalidInput）原样返回给前端；
+// 其他错误（数据库挂了等）只回笼统信息，细节写日志，避免把内部结构暴露给外部。
+func (h *ArticleHandler) fail(c *gin.Context, err error, fallback string) {
+	switch {
+	case errors.Is(err, service.ErrNotFound):
+		response.NotFound(c, err.Error())
+	case errors.Is(err, service.ErrInvalidInput):
+		response.InvalidParam(c, err.Error())
+	default:
+		log.Printf("[ERROR] %s: %v", fallback, err)
+		response.ServerError(c, fallback)
+	}
 }
