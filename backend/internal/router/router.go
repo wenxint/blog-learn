@@ -21,7 +21,8 @@ import (
 // db 通过参数传进来，handler 不自己去连数据库，也不用全局变量。
 // 这样换一个数据库对象（比如测试里的）时，不用改 handler 内部。
 // jwtMgr 同理：中间件需要它验签，但 middleware 包不该自己去读配置。
-func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
+// uploadSvc 负责把上传的文件落到磁盘，router 只负责把 /uploads 这个路径映射过去。
+func New(db *gorm.DB, jwtMgr *jwt.Manager, uploadSvc *service.UploadService) *gin.Engine {
 	// 生产模式关掉 Gin 的调试路由打印。开发环境保持默认的 DebugMode。
 	if os.Getenv("APP_ENV") == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -31,8 +32,16 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
 	// gin.Default() 会自带一份，和我们的 Logger / Recovery 重复，所以不用它。
 	r := gin.New()
 
+	// 上传文件在内存里缓冲的上限：超过 8MB 的部分会落到临时文件，
+	// 防止有人传大文件把内存吃光
+	r.MaxMultipartMemory = 8 << 20
+
 	// 不信任任何代理，ClientIP 直接取 RemoteAddr（避免伪造 X-Forwarded-For）
 	_ = r.SetTrustedProxies(nil)
+
+	// 把上传目录挂成静态资源：/uploads/2026/11/xxxx.png 直接可访问。
+	// 注意这里只允许 GET，而且只能读 uploads 目录内部，不会读到源码。
+	r.Static("/uploads", uploadSvc.Dir())
 
 	// 全局中间件：每个请求都按这个顺序穿过，再进入具体接口。
 	// 可以想成安检：先发编号，再记日志，再兜住崩溃，再处理跨域。
@@ -77,6 +86,8 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
 	commentRepo := repository.NewCommentRepository(db)
 	commentSvc := service.NewCommentService(commentRepo, articleRepo)
 	commentHandler := handler.NewCommentHandler(commentSvc)
+
+	uploadHandler := handler.NewUploadHandler(uploadSvc)
 
 	// debug 是纯诊断接口，不涉及业务规则，直接用 db
 	debugHandler := handler.NewDebugHandler(db)
@@ -129,6 +140,9 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
 		{
 			// POST / PUT / DELETE 是「有副作用」的请求：
 			// 浏览器地址栏访问不到，必须用表单、fetch 或 curl -X 指定。
+			// 图片上传：需要登录（author 也能传，写文章时要配图）
+			admin.POST("/upload", uploadHandler.Upload)
+
 			admin.POST("/articles", articleHandler.Create)
 			admin.PUT("/articles/:id", articleHandler.Update)
 			// 删除是危险操作，额外要求 admin 角色（author 只能写，不能删）
