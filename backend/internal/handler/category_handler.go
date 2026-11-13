@@ -1,49 +1,89 @@
 package handler
 
 import (
-	"blog/internal/model"
 	"blog/internal/pkg/response"
+	"blog/internal/service"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-// CategoryHandler 分类接口。和 ArticleHandler 一样，db 由 router 注入。
+// CategoryHandler 分类接口
 type CategoryHandler struct {
-	db *gorm.DB
+	svc *service.CategoryService
 }
 
-func NewCategoryHandler(db *gorm.DB) *CategoryHandler {
-	return &CategoryHandler{db: db}
+func NewCategoryHandler(svc *service.CategoryService) *CategoryHandler {
+	return &CategoryHandler{svc: svc}
 }
 
-// CategoryWithCount 在分类的全部字段之外，多一个文章数。
-// 第一行没有字段名、直接写 model.Category，叫嵌入：外层会带上 Category 的所有字段，
-// JSON 里不会多包一层，看起来仍是 {id, name, slug, ..., article_count}。
-type CategoryWithCount struct {
-	model.Category
-	ArticleCount int64 `json:"article_count"`
+type categoryRequest struct {
+	Name        string `json:"name" binding:"required,max=50"`
+	Slug        string `json:"slug" binding:"required,max=50"`
+	Description string `json:"description" binding:"omitempty,max=200"`
+	Sort        int    `json:"sort"`
 }
 
 // List 分类列表：GET /api/v1/categories
 func (h *CategoryHandler) List(c *gin.Context) {
-	var list []CategoryWithCount
-
-	// 相关子查询：每一行分类，都去 articles 里数一次「属于我、已发布、未软删除」的文章。
-	// 用子查询而不是 JOIN + GROUP BY，是为了避开 MySQL ONLY_FULL_GROUP_BY 对分组字段的限制。
-	// Scan 把查询结果按列名填进 list，不走 Model 的自动关联。
-	err := h.db.Model(&model.Category{}).
-		Select(`categories.*,
-		        (SELECT COUNT(*) FROM articles a
-		         WHERE a.category_id = categories.id
-		           AND a.status = 1
-		           AND a.deleted_at IS NULL) AS article_count`).
-		Order("categories.sort ASC, categories.id ASC").
-		Scan(&list).Error
+	list, err := h.svc.List()
 	if err != nil {
-		response.ServerError(c, "查询分类列表失败")
+		fail(c, err, "查询分类列表失败")
+		return
+	}
+	response.OK(c, gin.H{"list": list})
+}
+
+// Create 新建分类：POST /api/v1/admin/categories （需 admin）
+func (h *CategoryHandler) Create(c *gin.Context) {
+	var req categoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.InvalidParam(c, "请求体错误: "+err.Error())
 		return
 	}
 
-	response.OK(c, gin.H{"list": list})
+	cat, err := h.svc.Create(service.CategoryInput{
+		Name: req.Name, Slug: req.Slug, Description: req.Description, Sort: req.Sort,
+	})
+	if err != nil {
+		fail(c, err, "创建分类失败")
+		return
+	}
+	response.OK(c, cat)
+}
+
+// Update 编辑分类：PUT /api/v1/admin/categories/:id
+func (h *CategoryHandler) Update(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	var req categoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.InvalidParam(c, "请求体错误: "+err.Error())
+		return
+	}
+
+	cat, err := h.svc.Update(id, service.CategoryInput{
+		Name: req.Name, Slug: req.Slug, Description: req.Description, Sort: req.Sort,
+	})
+	if err != nil {
+		fail(c, err, "更新分类失败")
+		return
+	}
+	response.OK(c, cat)
+}
+
+// Delete 删除分类：DELETE /api/v1/admin/categories/:id
+func (h *CategoryHandler) Delete(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.svc.Delete(id); err != nil {
+		fail(c, err, "删除分类失败")
+		return
+	}
+	response.OK(c, gin.H{"id": id, "deleted": true})
 }

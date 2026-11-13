@@ -65,7 +65,20 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
 	authSvc := service.NewAuthService(db, userRepo, jwtMgr)
 	authHandler := handler.NewAuthHandler(authSvc)
 
-	categoryHandler := handler.NewCategoryHandler(db)
+	// 分类与标签也走同样的三层：repo -> service -> handler
+	categoryRepo := repository.NewCategoryRepository(db)
+	categorySvc := service.NewCategoryService(categoryRepo)
+	categoryHandler := handler.NewCategoryHandler(categorySvc)
+
+	tagRepo := repository.NewTagRepository(db)
+	tagSvc := service.NewTagService(tagRepo)
+	tagHandler := handler.NewTagHandler(tagSvc)
+
+	commentRepo := repository.NewCommentRepository(db)
+	commentSvc := service.NewCommentService(commentRepo, articleRepo)
+	commentHandler := handler.NewCommentHandler(commentSvc)
+
+	// debug 是纯诊断接口，不涉及业务规则，直接用 db
 	debugHandler := handler.NewDebugHandler(db)
 
 	// 路由分组：花括号里登记的路径都会自动加上 /api/v1。
@@ -84,6 +97,14 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
 		// /:id 是路径参数，curl /articles/1 时 handler 里用 c.Param("id") 取到 "1"
 		api.GET("/articles/:id", articleHandler.Detail)
 		api.GET("/categories", categoryHandler.List)
+		api.GET("/tags", tagHandler.List)
+		// 归档是跨文章的聚合统计，路径放在 /archives 而不是 /articles/archives，
+		// 避免和 /articles/:id 的 :id 段冲突
+		api.GET("/archives", articleHandler.Archives)
+
+		// 评论：前台可读可写。写入后进入待审核，不直接展示。
+		api.GET("/articles/:id/comments", commentHandler.List)
+		api.POST("/articles/:id/comments", commentHandler.Create)
 
 		// 认证接口。分组前缀 /api/v1/auth。
 		// register / login 必须公开：用户还没登录，哪来的 token。
@@ -112,6 +133,21 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager) *gin.Engine {
 			admin.PUT("/articles/:id", articleHandler.Update)
 			// 删除是危险操作，额外要求 admin 角色（author 只能写，不能删）
 			admin.DELETE("/articles/:id", middleware.AdminOnly(), articleHandler.Delete)
+
+			// 分类和标签的增删改都只给 admin：
+			// 它们是全站共享的分类体系，author 随手改会打乱所有人的文章归类
+			admin.POST("/categories", middleware.AdminOnly(), categoryHandler.Create)
+			admin.PUT("/categories/:id", middleware.AdminOnly(), categoryHandler.Update)
+			admin.DELETE("/categories/:id", middleware.AdminOnly(), categoryHandler.Delete)
+
+			// 评论审核
+			admin.GET("/comments", commentHandler.AdminList)
+			admin.PUT("/comments/:id/status", middleware.AdminOnly(), commentHandler.SetStatus)
+			admin.DELETE("/comments/:id", middleware.AdminOnly(), commentHandler.Delete)
+
+			admin.POST("/tags", tagHandler.Create)
+			admin.PUT("/tags/:id", tagHandler.Update)
+			admin.DELETE("/tags/:id", middleware.AdminOnly(), tagHandler.Delete)
 		}
 
 		// 仅开发环境暴露的诊断接口

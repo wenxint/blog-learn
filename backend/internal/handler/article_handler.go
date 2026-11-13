@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"blog/internal/pkg/authctx"
+	"blog/internal/pkg/pagination"
 	"blog/internal/pkg/response"
 	"blog/internal/repository"
 	"blog/internal/service"
@@ -35,8 +36,10 @@ func NewArticleHandler(svc *service.ArticleService) *ArticleHandler {
 // form:"page" 告诉 Gin：把 query 里的 page 填进 Page。
 // binding 是校验规则：omitempty 表示可以不传；gte=1 表示传了就必须 ≥ 1；lte=100 是上限。
 type ListArticleQuery struct {
-	Page       int    `form:"page" binding:"omitempty,gte=1"`
-	PageSize   int    `form:"page_size" binding:"omitempty,gte=1,lte=100"`
+	// 匿名嵌入：page / page_size 两个参数和它们的默认值、上限统一由 pagination 包管理，
+	// 所有列表接口行为一致，改规则只改一处。Gin 会自动把嵌入结构体的字段一起绑定校验。
+	pagination.Query
+
 	Keyword    string `form:"keyword" binding:"omitempty,max=50"`
 	CategoryID uint64 `form:"category_id" binding:"omitempty,gte=1"`
 	TagID      uint64 `form:"tag_id" binding:"omitempty,gte=1"`
@@ -61,16 +64,6 @@ type articleRequest struct {
 	TagIDs     []uint64 `json:"tag_ids"`
 }
 
-// PageResult 分页结果（第 11 课会抽到 pkg/pagination）
-type PageResult struct {
-	List     any   `json:"list"`
-	Total    int64 `json:"total"`
-	Page     int   `json:"page"`
-	PageSize int   `json:"page_size"`
-}
-
-const defaultPageSize = 20
-
 // List 文章列表：GET /api/v1/articles?page=1&page_size=20&keyword=Go&category_id=1
 // (h *ArticleHandler) 表示这是 ArticleHandler 的方法。router 里写 articleHandler.List 就能注册它。
 // h 是这份 handler，c 是这一次请求。
@@ -82,13 +75,8 @@ func (h *ArticleHandler) List(c *gin.Context) {
 		response.InvalidParam(c, "参数错误: "+err.Error())
 		return
 	}
-	// 不传就给默认值。第 3 课的作业要求默认每页 20 条。
-	if q.Page <= 0 {
-		q.Page = 1
-	}
-	if q.PageSize <= 0 {
-		q.PageSize = defaultPageSize
-	}
+	// 补默认值、夹紧上限（默认 20，最多 100）
+	q.Normalize()
 
 	// 前台只展示已发布：把 status=1 装进指针传给 service。
 	// 用指针是为了表达「限定已发布」和「不限状态」的区别——后台列表就不限状态。
@@ -106,7 +94,7 @@ func (h *ArticleHandler) List(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, PageResult{List: list, Total: total, Page: q.Page, PageSize: q.PageSize})
+	response.OK(c, pagination.NewResult(list, total, q.Query))
 }
 
 // Detail 文章详情：GET /api/v1/articles/1
@@ -223,4 +211,15 @@ func parseID(c *gin.Context) (uint64, bool) {
 		return 0, false
 	}
 	return id, true
+}
+
+// Archives 归档：GET /api/v1/archives
+// 返回每个月的文章数，前台「归档」页用它渲染时间轴。
+func (h *ArticleHandler) Archives(c *gin.Context) {
+	list, err := h.svc.Archives()
+	if err != nil {
+		fail(c, err, "查询归档失败")
+		return
+	}
+	response.OK(c, gin.H{"list": list})
 }

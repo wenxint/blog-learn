@@ -225,3 +225,8 @@ func tagIDs(tags []model.Tag) []uint64 {
 	}
 	return ids
 }
+
+// Archives 归档统计
+func (s *ArticleService) Archives() ([]repository.ArchiveItem, error) {
+	return s.repo.Archives()
+}

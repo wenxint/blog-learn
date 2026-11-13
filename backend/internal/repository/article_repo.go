@@ -148,3 +148,24 @@ func (r *ArticleRepository) CountByTitle(title string) (int64, error) {
 	err := r.db.Model(&model.Article{}).Where("title = ?", title).Count(&n).Error
 	return n, err
 }
+
+// ArchiveItem 归档条目：某个月有多少篇已发布文章
+type ArchiveItem struct {
+	Month string `json:"month"` // 形如 2026-11
+	Count int64  `json:"count"`
+}
+
+// Archives 按月份统计已发布文章数量，倒序返回。
+//
+// DATE_FORMAT 把 published_at 截成 YYYY-MM 再分组。
+// 真实项目里这种聚合通常走缓存（数据不常变、查询却频繁）。
+func (r *ArticleRepository) Archives() ([]ArchiveItem, error) {
+	var list []ArchiveItem
+	err := r.db.Model(&model.Article{}).
+		Select("DATE_FORMAT(published_at, '%Y-%m') AS month, COUNT(*) AS count").
+		Where("status = ? AND published_at IS NOT NULL", 1).
+		Group("month").
+		Order("month DESC").
+		Scan(&list).Error
+	return list, err
+}
