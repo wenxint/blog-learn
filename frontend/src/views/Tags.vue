@@ -2,7 +2,6 @@
 // 标签云页：点标签跳到首页并带上 tag_id 筛选
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElSkeleton, ElEmpty } from 'element-plus'
 import { fetchTags } from '../api/article'
 
 const router = useRouter()

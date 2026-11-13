@@ -26,6 +26,8 @@ func fail(c *gin.Context, err error, fallback string) {
 		response.Unauthorized(c, err.Error()) // 401
 	case errors.Is(err, service.ErrConflict):
 		response.Conflict(c, err.Error()) // 409
+	case errors.Is(err, service.ErrTooManyReqs):
+		response.TooManyRequests(c, err.Error()) // 429
 	case errors.Is(err, service.ErrInvalidInput):
 		response.InvalidParam(c, err.Error()) // 400
 	default:

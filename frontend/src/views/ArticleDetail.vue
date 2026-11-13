@@ -2,7 +2,6 @@
 // 文章详情页：正文 + 评论
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElTag, ElInput, ElButton, ElMessage, ElSkeleton, ElEmpty } from 'element-plus'
 import { createComment, fetchArticleDetail, fetchComments } from '../api/article'
 import { formatDate } from '../utils/format'
 import { renderMarkdown } from '../utils/markdown'

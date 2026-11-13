@@ -11,6 +11,7 @@ import (
 	"fmt"     // 拼字符串、包装错误
 	"os"      // 读文件是否存在、读环境变量
 	"strconv" // 把字符串 "50" 转成数字 50
+	"strings" // 拆分逗号分隔的配置
 	"time"    // 分钟等时间类型
 
 	// 第三方库。godotenv 会把 .env 里的 KEY=VALUE 写进本进程的环境变量。
@@ -25,6 +26,12 @@ type Config struct {
 	DB      DB     // 数据库相关，嵌套的另一份结构体
 	JWT     JWT    // 登录令牌相关（第 9 课才用到）
 	Upload  Upload // 图片上传相关（第 15 课才用到）
+	Limit   Limit  // 限流相关（第 14 课补充）
+
+	// TrustedProxies 可信代理地址。为空表示「谁都不信」，
+	// ClientIP() 直接用 TCP 对端 IP。
+	// 部署在 Nginx 后面时填 127.0.0.1，才会采信 X-Forwarded-For。
+	TrustedProxies []string
 }
 
 // DB 数据库相关配置
@@ -50,6 +57,13 @@ type JWT struct {
 type Upload struct {
 	Dir   string // 图片存到哪个目录
 	MaxMB int    // 单文件最大几 MB
+}
+
+// Limit 限流配置。
+// 目前只用于评论接口：同一个 IP 在时间窗口内最多发几条。
+type Limit struct {
+	CommentCount  int           // 窗口内允许的评论条数，默认 3
+	CommentWindow time.Duration // 窗口长度，默认 60 秒
 }
 
 // DSN 拼出 go-sql-driver/mysql 需要的连接串。
@@ -117,6 +131,11 @@ func Load() (*Config, error) {
 			Dir:   getEnv("UPLOAD_DIR", "./uploads"),
 			MaxMB: getEnvInt("UPLOAD_MAX_MB", 5),
 		},
+		Limit: Limit{
+			CommentCount:  getEnvInt("COMMENT_RATE_LIMIT", 3),
+			CommentWindow: time.Duration(getEnvInt("COMMENT_RATE_WINDOW_SEC", 60)) * time.Second,
+		},
+		TrustedProxies: getEnvList("TRUSTED_PROXIES"),
 	}
 
 	// 缺必填项就不要返回这份配置。main 看到错误会退出，避免带着空密码跑起来。
@@ -153,6 +172,22 @@ func getEnv(key, fallback string) string {
 
 // getEnvInt 读一个整数环境变量。内容不是合法整数时，不报错，退回 fallback。
 // 例如 DB_MAX_OPEN_CONNS=abc 时，会安静地用默认值 50，而不是在启动阶段退出。
+// getEnvList 把逗号分隔的环境变量切成切片，例如 TRUSTED_PROXIES=127.0.0.1,::1
+func getEnvList(key string) []string {
+	v := getEnv(key, "")
+	if v == "" {
+		return nil
+	}
+	parts := strings.Split(v, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
 func getEnvInt(key string, fallback int) int {
 	v, ok := os.LookupEnv(key)
 	if !ok || v == "" {

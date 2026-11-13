@@ -2,7 +2,6 @@
 // 文章管理：列表 + 筛选 + 删除 + 跳转编辑
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchAdminArticles, deleteArticle } from '../../api/admin'
 import { formatDate } from '../../utils/format'
 

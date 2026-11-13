@@ -21,6 +21,7 @@ const (
 	CodeNotFound     = 10004 // 资源不存在       -> 404
 	CodeConflict     = 10005 // 冲突             -> 409
 	CodeServerError  = 10006 // 服务器内部错误   -> 500
+	CodeTooManyReqs  = 10007 // 请求过于频繁     -> 429
 )
 
 // Body 是所有接口统一的响应结构。
@@ -67,4 +68,9 @@ func Conflict(c *gin.Context, message string) {
 
 func ServerError(c *gin.Context, message string) {
 	Fail(c, http.StatusInternalServerError, CodeServerError, message)
+}
+
+// TooManyRequests 限流：告诉调用方「慢点」，配合 Retry-After 头体验更好
+func TooManyRequests(c *gin.Context, message string) {
+	Fail(c, http.StatusTooManyRequests, CodeTooManyReqs, message)
 }

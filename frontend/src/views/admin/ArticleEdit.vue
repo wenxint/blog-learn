@@ -2,7 +2,6 @@
 // 文章编辑页：新建与编辑共用（靠路由里有没有 id 区分）
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import {
   createArticle,
   fetchAdminArticle,

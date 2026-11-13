@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"blog/internal/model"
+	"blog/internal/pkg/ratelimit"
 	"blog/internal/repository"
 )
 
@@ -24,10 +25,15 @@ const (
 type CommentService struct {
 	comments *repository.CommentRepository
 	articles *repository.ArticleRepository
+	limiter  *ratelimit.Limiter
 }
 
-func NewCommentService(comments *repository.CommentRepository, articles *repository.ArticleRepository) *CommentService {
-	return &CommentService{comments: comments, articles: articles}
+func NewCommentService(
+	comments *repository.CommentRepository,
+	articles *repository.ArticleRepository,
+	limiter *ratelimit.Limiter,
+) *CommentService {
+	return &CommentService{comments: comments, articles: articles, limiter: limiter}
 }
 
 // CommentNode 一条评论 + 它的回复（只有两级：评论、回复，不做无限嵌套）
@@ -87,6 +93,14 @@ func (s *CommentService) ListTree(articleID uint64) ([]CommentNode, error) {
 
 // Create 发表评论。默认进入「待审核」状态，管理员通过后才在前台展示。
 func (s *CommentService) Create(articleID uint64, in CreateCommentInput) (*model.Comment, error) {
+	// 限流放在最前面：连参数都不用校验，直接挡住刷接口的脚本
+	if s.limiter != nil {
+		if ok, retryAfter := s.limiter.Allow(in.IP); !ok {
+			return nil, fmt.Errorf("%w: 发表太频繁，请 %d 秒后再试",
+				ErrTooManyReqs, int(retryAfter.Seconds())+1)
+		}
+	}
+
 	in.Nickname = strings.TrimSpace(in.Nickname)
 	in.Content = strings.TrimSpace(in.Content)
 	in.Email = strings.TrimSpace(in.Email)

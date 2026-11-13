@@ -6,9 +6,11 @@ import (
 	"os"
 	"time"
 
+	"blog/internal/config"
 	"blog/internal/handler"
 	"blog/internal/middleware"
 	"blog/internal/pkg/jwt"
+	"blog/internal/pkg/ratelimit"
 	"blog/internal/pkg/response"
 	"blog/internal/repository"
 	"blog/internal/service"
@@ -22,7 +24,23 @@ import (
 // 这样换一个数据库对象（比如测试里的）时，不用改 handler 内部。
 // jwtMgr 同理：中间件需要它验签，但 middleware 包不该自己去读配置。
 // uploadSvc 负责把上传的文件落到磁盘，router 只负责把 /uploads 这个路径映射过去。
-func New(db *gorm.DB, jwtMgr *jwt.Manager, uploadSvc *service.UploadService) *gin.Engine {
+// Deps 是 router 需要的全部外部依赖。
+//
+// 为什么用一个结构体而不是继续加参数：
+// 参数一多，调用处就变成 router.New(db, jwt, upload, limit, cache, ...)，
+// 谁都不想数第 5 个参数是什么。结构体让调用点自解释，加依赖也不用改签名。
+type Deps struct {
+	DB     *gorm.DB
+	JWT    *jwt.Manager
+	Upload *service.UploadService
+	Limit  config.Limit
+	// TrustedProxies 见 config.Config.TrustedProxies 的说明
+	TrustedProxies []string
+}
+
+func New(d Deps) *gin.Engine {
+	db, jwtMgr, uploadSvc := d.DB, d.JWT, d.Upload
+
 	// 生产模式关掉 Gin 的调试路由打印。开发环境保持默认的 DebugMode。
 	if os.Getenv("APP_ENV") == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -36,8 +54,14 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager, uploadSvc *service.UploadService) *gi
 	// 防止有人传大文件把内存吃光
 	r.MaxMultipartMemory = 8 << 20
 
-	// 不信任任何代理，ClientIP 直接取 RemoteAddr（避免伪造 X-Forwarded-For）
-	_ = r.SetTrustedProxies(nil)
+	// 可信代理：默认「谁都不信」，ClientIP 直接取 TCP 对端地址。
+	// 部署在 Nginx 后面时配置 TRUSTED_PROXIES=127.0.0.1，
+	// 否则所有评论的 IP 都会记成 127.0.0.1（限流也会把所有人当成同一个 IP）。
+	if len(d.TrustedProxies) > 0 {
+		_ = r.SetTrustedProxies(d.TrustedProxies)
+	} else {
+		_ = r.SetTrustedProxies(nil)
+	}
 
 	// 把上传目录挂成静态资源：/uploads/2026/11/xxxx.png 直接可访问。
 	// 注意这里只允许 GET，而且只能读 uploads 目录内部，不会读到源码。
@@ -84,7 +108,10 @@ func New(db *gorm.DB, jwtMgr *jwt.Manager, uploadSvc *service.UploadService) *gi
 	tagHandler := handler.NewTagHandler(tagSvc)
 
 	commentRepo := repository.NewCommentRepository(db)
-	commentSvc := service.NewCommentService(commentRepo, articleRepo)
+	// 评论限流：同 IP 在窗口内只能发 N 条（数值来自 .env，默认 3 条 / 60 秒）
+	commentLimiter := ratelimit.New(d.Limit.CommentCount, d.Limit.CommentWindow)
+
+	commentSvc := service.NewCommentService(commentRepo, articleRepo, commentLimiter)
 	commentHandler := handler.NewCommentHandler(commentSvc)
 
 	uploadHandler := handler.NewUploadHandler(uploadSvc)

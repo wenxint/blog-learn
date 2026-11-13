@@ -1,0 +1,60 @@
+# systemd 服务单元示例
+#
+# 安装：
+#   sudo cp deploy/blog-server.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now blog-server
+#
+# 查看状态/日志：
+#   systemctl status blog-server
+#   journalctl -u blog-server -f
+
+[Unit]
+Description=Blog API Server (Go)
+Documentation=https://github.com/your/blog
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# 用专用低权限用户跑，别用 root
+User=blog
+Group=blog
+
+# 工作目录必须是 backend/：程序会从当前目录读 .env
+WorkingDirectory=/opt/blog/backend
+
+# 也可以把配置放进 systemd 环境文件（优先级高于 .env 里的同名变量）
+# 这种方式的好处是 .env 里不必放生产密码
+# EnvironmentFile=-/etc/blog/blog.env
+
+ExecStart=/opt/blog/backend/bin/blog-server
+
+# 崩溃自动重启
+Restart=always
+RestartSec=5s
+
+# 优雅关闭：SIGTERM 后进程会在 10 秒内排空进行中的请求，
+# 这里给 15 秒余量，超时 systemd 才会 SIGKILL。
+KillSignal=SIGTERM
+TimeoutStopSec=15s
+
+# 生产环境关掉 Gin 调试路由打印与 debug 接口
+Environment=APP_ENV=prod
+
+# 基础加固
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# 上传目录需要可写
+ReadWritePaths=/opt/blog/backend/uploads
+
+# 日志：交给 journald（别自己再写一份日志文件轮转）
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=blog-server
+
+[Install]
+WantedBy=multi-user.target

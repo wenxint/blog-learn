@@ -1,7 +1,5 @@
 <script setup>
 import { useRouter } from 'vue-router'
-import { ElButton } from 'element-plus'
-
 const router = useRouter()
 </script>
 

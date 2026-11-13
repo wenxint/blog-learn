@@ -13,6 +13,7 @@ var (
 	ErrInvalidInput = errors.New("参数不合法")
 	ErrUnauthorized = errors.New("认证失败")
 	ErrConflict     = errors.New("资源冲突")
+	ErrTooManyReqs  = errors.New("请求过于频繁")
 )
 
 // IsNotFound 判断是否是「找不到」类错误

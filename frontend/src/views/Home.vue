@@ -2,7 +2,6 @@
 // 首页：文章列表 + 分类筛选 + 搜索 + 分页
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElSkeleton, ElPagination, ElInput, ElTag, ElEmpty, ElButton } from 'element-plus'
 import { fetchArticles, fetchCategories } from '../api/article'
 import { formatDate } from '../utils/format'
 

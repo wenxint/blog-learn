@@ -1,7 +1,6 @@
 <script setup>
 // 评论审核：默认展示待审核，可切换到已通过
 import { onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { deleteComment, fetchAdminComments, setCommentStatus } from '../../api/admin'
 import { formatDate } from '../../utils/format'
 

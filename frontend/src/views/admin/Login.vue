@@ -2,7 +2,6 @@
 // 后台登录页：没有布局（不套侧边栏），单独一屏
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()

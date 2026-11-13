@@ -2,7 +2,6 @@
 // 归档页：按年份分组的时间轴，点月份跳到首页并带上筛选条件
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElSkeleton, ElEmpty } from 'element-plus'
 import { fetchArchives } from '../api/article'
 
 const router = useRouter()

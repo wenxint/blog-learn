@@ -58,8 +58,14 @@ func main() {
 	// 也没法优雅关闭。这里自己控制。
 	// & 是取地址，得到指针。http.Server 是标准库里的结构体，下面按字段名填值。
 	srv := &http.Server{
-		Addr:    ":" + cfg.AppPort,                 // AppPort 来自 .env 的 APP_PORT，例如 "8090"，拼成监听地址 ":8090"
-		Handler: router.New(db, jwtMgr, uploadSvc), // 真正按网址分发请求的是 router 组装好的 Gin
+		Addr: ":" + cfg.AppPort, // AppPort 来自 .env 的 APP_PORT，例如 "8090"，拼成监听地址 ":8090"
+		Handler: router.New(router.Deps{ // 真正按网址分发请求的是 router 组装好的 Gin
+			DB:             db,
+			JWT:            jwtMgr,
+			Upload:         uploadSvc,
+			Limit:          cfg.Limit,
+			TrustedProxies: cfg.TrustedProxies,
+		}),
 		// 防止慢连接耗尽资源（Slowloris 攻击）
 		ReadHeaderTimeout: 5 * time.Second,  // 读完请求头的最长时间
 		ReadTimeout:       15 * time.Second, // 读完整个请求（含 body）的最长时间

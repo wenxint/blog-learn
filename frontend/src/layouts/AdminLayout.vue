@@ -2,7 +2,6 @@
 // 后台布局：左侧菜单 + 顶栏（当前用户 / 退出）+ 内容区
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessageBox, ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 
 const route = useRoute()
