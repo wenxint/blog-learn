@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>当前测试水位</title>
+  <desc>纯函数单测 24 个已落地；接口 curl 验收靠手动清单；service 层 mock 测试仍为 0；浏览器端到端只有视口断言。越靠下越稳、越靠上覆盖越少。</desc>
+
+  <rect x="0" y="0" width="960" height="470" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">测试水位：底部很实，中间是空的</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">越往下跑得越快、越稳定；越往上越接近真实用户，也越贵</text>
+
+  <!-- 四层 -->
+  <rect x="130" y="92" width="700" height="56" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="480" y="118" fill="#98a5bb" font-size="13.5" text-anchor="middle">浏览器端到端 · headless Chrome 视口断言</text>
+  <text x="480" y="137" fill="#5c6980" font-size="11" text-anchor="middle">只断言「无横向溢出」，没有点击流与表单流程</text>
+
+  <rect x="190" y="162" width="580" height="56" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="8"/>
+  <text x="480" y="188" fill="#e7ecf5" font-size="13.5" text-anchor="middle">接口验收 · curl 清单</text>
+  <text x="480" y="207" fill="#5c6980" font-size="11" text-anchor="middle">限流 429、未登录 401、未知路由 JSON、事务回滚——靠手跑</text>
+
+  <rect x="250" y="232" width="460" height="56" fill="#1a1116" stroke="#f07575" stroke-width="1.5" rx="8"/>
+  <text x="480" y="258" fill="#f07575" font-size="13.5" text-anchor="middle">service 层 mock 测试 · 0 个</text>
+  <text x="480" y="277" fill="#5c6980" font-size="11" text-anchor="middle">分页夹紧 / 评论两级校验 / 状态流转，目前只有手测</text>
+
+  <rect x="310" y="302" width="340" height="56" fill="#13211f" stroke="#58c7c0" stroke-width="1.5" rx="8"/>
+  <text x="480" y="328" fill="#58c7c0" font-size="13.5" text-anchor="middle">纯函数单测 · 24 个</text>
+  <text x="480" y="347" fill="#5c6980" font-size="11" text-anchor="middle">config / hash / jwt / ratelimit，1 秒跑完</text>
+
+  <!-- 右侧标注 -->
+  <text x="852" y="114" fill="#5c6980" font-size="11">部分</text>
+  <text x="852" y="184" fill="#5c6980" font-size="11">手动</text>
+  <text x="852" y="254" fill="#f07575" font-size="11">缺口</text>
+  <text x="852" y="324" fill="#58c7c0" font-size="11">已落地</text>
+
+  <!-- 水位线 -->
+  <path d="M110,292 L850,292" stroke="#f5b942" stroke-width="1.5" stroke-dasharray="6 4" fill="none"/>
+  <text x="30" y="288" fill="#f5b942" font-size="11" font-family="ui-monospace, Menlo, monospace">当前水位</text>
+
+  <text x="30" y="410" fill="#98a5bb" font-size="13">安全边界（hash / jwt / 限流）已经有自动化兜底；业务规则仍然依赖人工验收 —— 这就是下一步要补的一层。</text>
+  <text x="30" y="444" fill="#5c6980" font-size="12">数字来自 go test ./... -count=1：config 7 · hash 6 · jwt 6 · ratelimit 5</text>
+</svg>

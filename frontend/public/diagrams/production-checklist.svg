@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>开发环境与生产环境的六组配置差异</title>
+  <desc>APP_ENV、可信代理、JWT 密钥、数据库监听、运行用户、上传上限六项配置，在开发和生产环境必须显式翻转，漏一项就是一个生产隐患。</desc>
+  <defs>
+    <marker id="pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="500" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">生产不是「dev 换个端口」</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">六组默认值必须显式翻转，每一项后面都跟着一个检查命令</text>
+
+  <!-- 1 -->
+  <rect x="30" y="78" width="430" height="108" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="48" y="102" fill="#e7ecf5" font-size="13" font-weight="600">1 · 调试接口</text>
+  <rect x="42" y="112" width="180" height="58" fill="#1a1116" stroke="#3a2a2a" rx="5"/>
+  <text x="54" y="130" fill="#f07575" font-size="9.5">DEV</text>
+  <text x="54" y="151" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">APP_ENV=dev</text>
+  <rect x="256" y="112" width="180" height="58" fill="#13211f" stroke="#2a4a46" rx="5"/>
+  <text x="268" y="130" fill="#58c7c0" font-size="9.5">PROD</text>
+  <text x="268" y="151" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">APP_ENV=prod</text>
+  <path d="M224,141 L254,141" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#pa)"/>
+
+  <!-- 2 -->
+  <rect x="500" y="78" width="430" height="108" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="518" y="102" fill="#e7ecf5" font-size="13" font-weight="600">2 · 真实 IP</text>
+  <rect x="512" y="112" width="180" height="58" fill="#1a1116" stroke="#3a2a2a" rx="5"/>
+  <text x="524" y="130" fill="#f07575" font-size="9.5">DEV</text>
+  <text x="524" y="151" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">TRUSTED_PROXIES=</text>
+  <rect x="726" y="112" width="180" height="58" fill="#13211f" stroke="#2a4a46" rx="5"/>
+  <text x="738" y="130" fill="#58c7c0" font-size="9.5">PROD</text>
+  <text x="738" y="151" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">TRUSTED_PROXIES=127.0.0.1</text>
+  <path d="M694,141 L724,141" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#pa)"/>
+
+  <!-- 3 -->
+  <rect x="30" y="200" width="430" height="108" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="48" y="224" fill="#e7ecf5" font-size="13" font-weight="600">3 · 令牌密钥</text>
+  <rect x="42" y="234" width="180" height="58" fill="#1a1116" stroke="#3a2a2a" rx="5"/>
+  <text x="54" y="252" fill="#f07575" font-size="9.5">DEV</text>
+  <text x="54" y="273" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">示例值</text>
+  <rect x="256" y="234" width="180" height="58" fill="#13211f" stroke="#2a4a46" rx="5"/>
+  <text x="268" y="252" fill="#58c7c0" font-size="9.5">PROD</text>
+  <text x="268" y="273" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">openssl rand -hex 32</text>
+  <path d="M224,263 L254,263" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#pa)"/>
+
+  <!-- 4 -->
+  <rect x="500" y="200" width="430" height="108" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="518" y="224" fill="#e7ecf5" font-size="13" font-weight="600">4 · 数据库</text>
+  <rect x="512" y="234" width="180" height="58" fill="#1a1116" stroke="#3a2a2a" rx="5"/>
+  <text x="524" y="252" fill="#f07575" font-size="9.5">DEV</text>
+  <text x="524" y="273" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">root / 任意监听</text>
+  <rect x="726" y="234" width="180" height="58" fill="#13211f" stroke="#2a4a46" rx="5"/>
+  <text x="738" y="252" fill="#58c7c0" font-size="9.5">PROD</text>
+  <text x="738" y="273" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">127.0.0.1 / blog 账号</text>
+  <path d="M694,263 L724,263" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#pa)"/>
+
+  <!-- 5 -->
+  <rect x="30" y="322" width="430" height="108" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="48" y="346" fill="#e7ecf5" font-size="13" font-weight="600">5 · 运行进程</text>
+  <rect x="42" y="356" width="180" height="58" fill="#1a1116" stroke="#3a2a2a" rx="5"/>
+  <text x="54" y="374" fill="#f07575" font-size="9.5">DEV</text>
+  <text x="54" y="395" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">当前用户 / 前台跑</text>
+  <rect x="256" y="356" width="180" height="58" fill="#13211f" stroke="#2a4a46" rx="5"/>
+  <text x="268" y="374" fill="#58c7c0" font-size="9.5">PROD</text>
+  <text x="268" y="395" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">User=blog / systemd</text>
+  <path d="M224,385 L254,385" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#pa)"/>
+
+  <!-- 6 -->
+  <rect x="500" y="322" width="430" height="108" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="518" y="346" fill="#e7ecf5" font-size="13" font-weight="600">6 · 上传上限</text>
+  <rect x="512" y="356" width="180" height="58" fill="#1a1116" stroke="#3a2a2a" rx="5"/>
+  <text x="524" y="374" fill="#f07575" font-size="9.5">DEV</text>
+  <text x="524" y="395" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">后端 5MB 单层</text>
+  <rect x="726" y="356" width="180" height="58" fill="#13211f" stroke="#2a4a46" rx="5"/>
+  <text x="738" y="374" fill="#58c7c0" font-size="9.5">PROD</text>
+  <text x="738" y="395" fill="#98a5bb" font-size="10.5" font-family="ui-monospace, Menlo, monospace">Nginx 8m ≥ 后端 5MB</text>
+  <path d="M694,385 L724,385" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#pa)"/>
+
+  <text x="30" y="470" fill="#98a5bb" font-size="13">每一项都要有对应的检查命令：curl 看调试路由是否 404、ps 看进程用户、ss 看 3306 是否只监听本机。</text>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>评论树的一次查询组装流程</title>
+  <desc>comments 是一张扁平表，一次 SQL 取出全部评论，按 parent_id 分桶后挂到父节点，查询次数恒定为 1，不会随评论数增长。</desc>
+  <defs>
+    <marker id="ca" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="500" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">评论树：一维表 → 一次查询 → 两级结构</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">示意数据：评论 #1、#2 是一级，#3 是 #2 的回复</text>
+
+  <!-- 左：数据库 -->
+  <rect x="30" y="82" width="250" height="222" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="48" y="110" fill="#e7ecf5" font-size="14.5" font-weight="600">comments（扁平表）</text>
+  <text x="48" y="130" fill="#5c6980" font-size="11" font-family="ui-monospace, Menlo, monospace">id · parent_id · nickname</text>
+
+  <rect x="46" y="144" width="218" height="30" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="58" y="164" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">#1 · parent 0 · 小明</text>
+
+  <rect x="46" y="182" width="218" height="30" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="58" y="202" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">#2 · parent 0 · 阿花</text>
+
+  <rect x="46" y="220" width="218" height="30" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="58" y="240" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">#3 · parent 2 · 作者</text>
+
+  <text x="48" y="278" fill="#5c6980" font-size="11.5">没有 children 字段</text>
+
+  <!-- 中：分桶 -->
+  <rect x="312" y="82" width="300" height="222" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="10"/>
+  <text x="330" y="110" fill="#e7ecf5" font-size="14.5" font-weight="600">内存里按 parent_id 分桶</text>
+  <text x="330" y="130" fill="#5c6980" font-size="11" font-family="ui-monospace, Menlo, monospace">childMap[父 id] = []子评论</text>
+
+  <rect x="330" y="144" width="264" height="44" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="344" y="164" fill="#f5b942" font-size="11.5" font-family="ui-monospace, Menlo, monospace">map[0] → [#1, #2]</text>
+  <text x="344" y="180" fill="#5c6980" font-size="10.5">顶层评论，没有父节点</text>
+
+  <rect x="330" y="198" width="264" height="44" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="344" y="218" fill="#f5b942" font-size="11.5" font-family="ui-monospace, Menlo, monospace">map[2] → [#3]</text>
+  <text x="344" y="234" fill="#5c6980" font-size="10.5">#3 的父节点是 #2</text>
+
+  <text x="330" y="274" fill="#5c6980" font-size="11.5">只遍历一遍，就把父子和兄弟关系都建好了</text>
+
+  <!-- 右：树 -->
+  <rect x="644" y="82" width="286" height="222" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="662" y="110" fill="#e7ecf5" font-size="14.5" font-weight="600">返回给前端的两级树</text>
+
+  <rect x="662" y="126" width="250" height="42" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="676" y="146" fill="#e7ecf5" font-size="12">评论 #1　小明</text>
+  <text x="676" y="160" fill="#5c6980" font-size="10.5">无回复</text>
+
+  <rect x="662" y="180" width="250" height="70" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="676" y="200" fill="#e7ecf5" font-size="12">评论 #2　阿花</text>
+  <text x="676" y="220" fill="#58c7c0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">└ 回复 #3　作者</text>
+  <text x="676" y="238" fill="#5c6980" font-size="10.5">回复挂在父评论的 replies 里</text>
+
+  <text x="662" y="278" fill="#5c6980" font-size="11.5">只有两级，所以不需要递归</text>
+
+  <!-- 箭头 -->
+  <path d="M280,193 L310,193" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ca)"/>
+  <path d="M612,193 L642,193" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ca)"/>
+
+  <!-- 底部对比 -->
+  <rect x="30" y="336" width="900" height="88" fill="#0b0f16" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="50" y="364" fill="#f07575" font-size="13" font-weight="600">递归查库：1 次查一级 + N 次查回复 = 1 + N 次数据库往返</text>
+  <text x="50" y="390" fill="#58c7c0" font-size="13" font-weight="600">本项目：1 次查全部 + 内存分桶 = 恒定 1 次</text>
+  <text x="50" y="411" fill="#98a5bb" font-size="12">评论越多，两种做法的差距越大；而一次读全的前提是「只有两级」。</text>
+
+  <text x="30" y="468" fill="#98a5bb" font-size="13">层级越深，组装越复杂 —— 限制两级不是偷懒，是把复杂度挡在数据层。</text>
+</svg>

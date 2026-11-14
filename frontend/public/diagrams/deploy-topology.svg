@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>部署拓扑：浏览器、Nginx、systemd 托管的 Go 服务与 MySQL</title>
+  <desc>上层是四个角色的链路：浏览器经 80/443 到 Nginx，Nginx 反向代理到只监听 127.0.0.1:8090 的 Go 服务，Go 再连本机 MySQL。下层拆开 Nginx 的三个 location：/assets/ 由 Nginx 直接发静态文件，/api/ 与 /uploads/ 反代给 Go。</desc>
+  <defs>
+    <style>
+      .h1 { fill: #e7ecf5; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+      .sub { fill: #98a5bb; font-size: 13px; }
+      .box { fill: #111826; stroke: #2a3446; stroke-width: 1.5; }
+      .box-a { fill: #111826; stroke: #f5b942; stroke-width: 1.5; }
+      .bt { fill: #e7ecf5; font-size: 17px; font-weight: 600; }
+      .bs { fill: #98a5bb; font-size: 13px; }
+      .bm { fill: #5c6980; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .al { fill: #f5b942; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
+      .loc { fill: #e7ecf5; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
+      .tgt { fill: #98a5bb; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
+      .nt { fill: #5c6980; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .pt { font-size: 11.5px; font-family: ui-monospace, Menlo, monospace; }
+      .foot { fill: #98a5bb; font-size: 13px; }
+    </style>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="520" fill="#0d131e"/>
+
+  <text class="h1" x="40" y="46">一台机器上的四个角色</text>
+  <text class="sub" x="40" y="74">对外只有 80 / 443；Go 与 MySQL 只在本机监听，外网连不到后两个端口。</text>
+
+  <!-- 链路 -->
+  <g>
+    <rect class="box" x="40" y="112" width="150" height="104" rx="10"/>
+    <text class="bt" x="115" y="148" text-anchor="middle">浏览器</text>
+    <text class="bs" x="115" y="172" text-anchor="middle">Vue3 单页应用</text>
+    <text class="bm" x="115" y="194" text-anchor="middle">history 路由</text>
+
+    <rect class="box-a" x="238" y="112" width="210" height="104" rx="10"/>
+    <text class="bt" x="343" y="148" text-anchor="middle">Nginx</text>
+    <text class="bs" x="343" y="172" text-anchor="middle">静态文件 + 反向代理</text>
+    <text class="bm" x="343" y="194" text-anchor="middle">:80 / :443（备案期 :8080）</text>
+
+    <rect class="box" x="496" y="112" width="210" height="104" rx="10"/>
+    <text class="bt" x="601" y="148" text-anchor="middle">Go 服务</text>
+    <text class="bs" x="601" y="172" text-anchor="middle">systemd 托管，User=blog</text>
+    <text class="bm" x="601" y="194" text-anchor="middle">127.0.0.1:8090</text>
+
+    <rect class="box" x="754" y="112" width="164" height="104" rx="10"/>
+    <text class="bt" x="836" y="148" text-anchor="middle">MySQL 8</text>
+    <text class="bs" x="836" y="172" text-anchor="middle">6 张业务表</text>
+    <text class="bm" x="836" y="194" text-anchor="middle">127.0.0.1:3306</text>
+  </g>
+
+  <path d="M192,164 L236,164" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M450,164 L494,164" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M708,164 L752,164" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text class="al" x="214" y="154" text-anchor="middle">HTTP</text>
+  <text class="al" x="472" y="154" text-anchor="middle">反代</text>
+  <text class="al" x="730" y="154" text-anchor="middle">SQL</text>
+
+  <path d="M343,216 L343,260" stroke="#2a3446" stroke-width="1.5" stroke-dasharray="4 4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 三个 location -->
+  <rect class="box" x="40" y="262" width="880" height="180" rx="10"/>
+  <text x="64" y="292" fill="#e7ecf5" font-size="15px" font-weight="600">Nginx 的三个 location（「/」只负责 SPA 回退）</text>
+
+  <text class="loc" x="64" y="330">/assets/</text>
+  <text x="150" y="330" fill="#5c6980" font-size="12px">→</text>
+  <text class="tgt" x="175" y="330">/var/www/blog/dist</text>
+  <text class="nt" x="420" y="330">expires 1y, immutable</text>
+  <rect x="660" y="312" width="236" height="28" rx="14" fill="none" stroke="#58c7c0" stroke-width="1.5"/>
+  <text class="pt" x="778" y="331" text-anchor="middle" fill="#58c7c0">sendfile，不经过 Go</text>
+
+  <line x1="64" y1="351" x2="896" y2="351" stroke="#2a3446" stroke-width="1"/>
+
+  <text class="loc" x="64" y="372">/api/</text>
+  <text x="150" y="372" fill="#5c6980" font-size="12px">→</text>
+  <text class="tgt" x="175" y="372">http://127.0.0.1:8090</text>
+  <text class="nt" x="420" y="372">X-Real-IP / X-Forwarded-For</text>
+  <rect x="660" y="354" width="236" height="28" rx="14" fill="none" stroke="#2a3446" stroke-width="1.5"/>
+  <text class="pt" x="778" y="373" text-anchor="middle" fill="#98a5bb">Go 路由 + 中间件链</text>
+
+  <line x1="64" y1="393" x2="896" y2="393" stroke="#2a3446" stroke-width="1"/>
+
+  <text class="loc" x="64" y="414">/uploads/</text>
+  <text x="150" y="414" fill="#5c6980" font-size="12px">→</text>
+  <text class="tgt" x="175" y="414">http://127.0.0.1:8090</text>
+  <text class="nt" x="420" y="414">expires 30d</text>
+  <rect x="660" y="396" width="236" height="28" rx="14" fill="none" stroke="#2a3446" stroke-width="1.5"/>
+  <text class="pt" x="778" y="415" text-anchor="middle" fill="#98a5bb">Go 进程里的 Static</text>
+
+  <text class="foot" x="40" y="486">静态请求走内核 sendfile，动态请求才进 Go——这条分工决定了整套部署的上限。</text>
+</svg>

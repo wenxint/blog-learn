@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>发布流水线：构建、上传 .new、原子替换、重启与健康检查</title>
+  <desc>横向的五步发布流水线：本地交叉编译 22MB 静态二进制、rsync 上传为 .new、mv 原子替换正式文件、systemctl restart、curl 健康检查；下方左侧是发布前的 mysqldump 与 uploads 备份，右侧是响应非 200 时用 .bak 回滚的分支。</desc>
+  <defs>
+    <style>
+      .h1 { fill: #e7ecf5; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+      .sub { fill: #98a5bb; font-size: 13px; }
+      .box { fill: #111826; stroke: #2a3446; stroke-width: 1.5; }
+      .num { fill: #f5b942; font-size: 11px; font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.08em; }
+      .bt { fill: #e7ecf5; font-size: 14px; font-weight: 600; }
+      .d1 { fill: #98a5bb; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .d2 { fill: #5c6980; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .al { fill: #98a5bb; font-size: 12px; }
+      .al-d { fill: #f07575; font-size: 12px; }
+      .foot { fill: #98a5bb; font-size: 13px; }
+    </style>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f07575"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="480" fill="#0d131e"/>
+
+  <text class="h1" x="40" y="46">一次发布就是五步，中间只换一次文件</text>
+  <text class="sub" x="40" y="74">mv 之前先留一份 .bak：回滚只是把它 cp 回来，再重启一次服务。</text>
+
+  <!-- 五步 -->
+  <g>
+    <rect class="box" x="40" y="132" width="156" height="118" rx="10"/>
+    <text class="num" x="58" y="160">01</text>
+    <text class="bt" x="58" y="188">交叉编译</text>
+    <text class="d1" x="58" y="212">deploy/build.sh</text>
+    <text class="d2" x="58" y="230">22MB 静态链接</text>
+
+    <rect class="box" x="220" y="132" width="156" height="118" rx="10"/>
+    <text class="num" x="238" y="160">02</text>
+    <text class="bt" x="238" y="188">上传 .new</text>
+    <text class="d1" x="238" y="212">rsync 到 .new</text>
+    <text class="d2" x="238" y="230">不碰正式文件</text>
+
+    <rect class="box" x="400" y="132" width="156" height="118" rx="10"/>
+    <text class="num" x="418" y="160">03</text>
+    <text class="bt" x="418" y="188">原子替换</text>
+    <text class="d1" x="418" y="212">mv .new 正式名</text>
+    <text class="d2" x="418" y="230">同目录 rename</text>
+
+    <rect class="box" x="580" y="132" width="156" height="118" rx="10"/>
+    <text class="num" x="598" y="160">04</text>
+    <text class="bt" x="598" y="188">重启服务</text>
+    <text class="d1" x="598" y="212">systemctl restart</text>
+    <text class="d2" x="598" y="230">15s 后 SIGKILL</text>
+
+    <rect class="box" x="760" y="132" width="156" height="118" rx="10"/>
+    <text class="num" x="778" y="160">05</text>
+    <text class="bt" x="778" y="188">健康检查</text>
+    <text class="d1" x="778" y="212">curl /api/v1/ping</text>
+    <text class="d2" x="778" y="230">journalctl -u</text>
+  </g>
+
+  <path d="M198,191 L216,191" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#a1)"/>
+  <path d="M378,191 L396,191" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#a1)"/>
+  <path d="M558,191 L576,191" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#a1)"/>
+  <path d="M738,191 L756,191" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#a1)"/>
+
+  <!-- 发布前备份 -->
+  <rect class="box" x="40" y="330" width="300" height="84" rx="10" stroke-dasharray="5 4"/>
+  <text x="60" y="360" fill="#f5b942" font-size="14px" font-weight="600">发布前</text>
+  <text class="d1" x="60" y="384">mysqldump | gzip</text>
+  <text class="d2" x="60" y="402">+ uploads 目录打包</text>
+  <path d="M118,328 L118,252" stroke="#5c6980" stroke-width="1.5" stroke-dasharray="4 4" fill="none" marker-end="url(#a1)"/>
+  <text class="al" x="132" y="294">先备份，再动手</text>
+
+  <!-- 回滚 -->
+  <rect x="560" y="330" width="360" height="84" rx="10" fill="#111826" stroke="#f07575" stroke-width="1.5"/>
+  <text x="580" y="360" fill="#f07575" font-size="14px" font-weight="600">失败就回滚</text>
+  <text class="d1" x="580" y="384">cp blog-server.bak blog-server</text>
+  <text class="d2" x="580" y="402">+ systemctl restart</text>
+  <path d="M838,252 L838,328" stroke="#f07575" stroke-width="1.5" stroke-dasharray="4 4" fill="none" marker-end="url(#a2)"/>
+  <text class="al-d" x="826" y="296" text-anchor="end">响应非 200 就回滚</text>
+
+  <text class="foot" x="40" y="446">传新文件不覆盖、mv 才换名、换完立刻用一条 curl 验活——顺序对了，回滚才有意义。</text>
+</svg>

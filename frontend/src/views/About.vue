@@ -24,9 +24,23 @@ const lessons = [
   'JWT 签发与鉴权中间件',
   '分页 / 分类 / 标签 / 归档',
   '评论楼中楼与审核',
+  '评论限流与真实 IP',
   '图片上传与静态资源',
   'Vue3 路由与请求封装',
-  'Markdown 渲染与后台管理',
+  '前台页面与三态处理',
+  'Markdown 渲染与 XSS 防护',
+  '后台管理与草稿',
+  '构建、Nginx 与 systemd',
+  '生产配置与安全清单',
+  '上线排障与复盘',
+]
+
+const parts = [
+  { name: '总览', count: 1, desc: '整体架构与技术选型' },
+  { name: '后端', count: 6, desc: '请求链路、分层、数据、认证、评论、上传' },
+  { name: '前端', count: 2, desc: '路由与请求封装、Markdown 与 XSS' },
+  { name: '部署', count: 3, desc: '构建发布、生产配置、上线实录' },
+  { name: '复盘', count: 1, desc: '取舍、测试水位与下一步' },
 ]
 </script>
 
@@ -47,6 +61,11 @@ const lessons = [
         后端不是照着模板生成的，每一层（配置、连接池、模型、仓储、业务、接口、中间件、鉴权）
         都手写过一遍，踩的坑记在 <code>docs/notes/踩坑记录.md</code> 里。
       </p>
+      <p>
+        围绕这个项目写了 <strong>13 篇建站系列</strong>：从整体架构、请求链路、后端分层、数据与索引、
+        登录鉴权、评论与限流、文件上传，到前端对接、构建发布、生产配置、上线排障和复盘。
+        每篇都配了讲解图，目标是让初学者也能顺着读下来。
+      </p>
     </section>
 
     <section class="card block">
@@ -60,7 +79,31 @@ const lessons = [
     </section>
 
     <section class="card block">
-      <h2>做过的内容</h2>
+      <h2>学习规模</h2>
+      <div class="stats">
+        <div class="stat"><span class="stat-num">20</span><span class="muted">课</span></div>
+        <div class="stat"><span class="stat-num">13</span><span class="muted">篇文章</span></div>
+        <div class="stat"><span class="stat-num">34</span><span class="muted">个接口</span></div>
+        <div class="stat"><span class="stat-num">24</span><span class="muted">个单测</span></div>
+      </div>
+    </section>
+
+    <section class="card block">
+      <h2>系列文章</h2>
+      <div class="parts">
+        <div v-for="part in parts" :key="part.name" class="part">
+          <span class="part-name">{{ part.name }}</span>
+          <span class="part-count">{{ part.count }} 篇</span>
+          <span class="part-desc muted">{{ part.desc }}</span>
+        </div>
+      </div>
+      <p class="muted">
+        全部收录在「建站记」分类下，从《这个博客是怎么搭起来的》开始按顺序读即可。
+      </p>
+    </section>
+
+    <section class="card block">
+      <h2>学过的内容（20 课）</h2>
       <ul class="lessons">
         <li v-for="(lesson, i) in lessons" :key="i">
           <span class="index">{{ String(i + 1).padStart(2, '0') }}</span>
@@ -168,6 +211,63 @@ code {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   gap: 0.5rem 1.5rem;
+}
+
+.stats {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.stat-num {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--amber);
+}
+
+.parts {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.part {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.part:last-child {
+  border-bottom: none;
+}
+
+.part-name {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 3rem;
+}
+
+.part-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--amber);
+  min-width: 3rem;
+}
+
+.part-desc {
+  font-size: 0.875rem;
 }
 
 .lessons li {

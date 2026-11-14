@@ -143,9 +143,9 @@ onMounted(() => {
           <p><span class="prompt">$</span> whoami</p>
           <p class="out">后端学习中</p>
           <p><span class="prompt">$</span> ls notes/</p>
-          <p class="out">http-server.md</p>
-          <p class="out">gorm-notes.md</p>
-          <p class="out">vue3-composition.md</p>
+          <p class="out">01-architecture.md</p>
+          <p class="out">05-auth-jwt.md</p>
+          <p class="out">10-deploy.md</p>
           <p><span class="prompt">$</span><span class="caret">▍</span></p>
         </div>
       </div>

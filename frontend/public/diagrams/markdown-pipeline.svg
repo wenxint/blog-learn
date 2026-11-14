@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>Markdown 到 DOM 的四步渲染管线</title>
+  <desc>Markdown 原文先由 marked 解析成 HTML，再由 marked-highlight 给代码块加高亮，然后 DOMPurify 按白名单剥掉 script、onerror、javascript 等危险内容，得到安全 HTML 字符串，最后交给 v-html 插入 DOM。</desc>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+    <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f07575"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="480" fill="#0d131e"/>
+
+  <text x="30" y="34" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace">utils/markdown.js · renderMarkdown()</text>
+
+  <!-- 五个阶段 -->
+  <rect x="30" y="64" width="164" height="88" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="112" y="96" font-size="16" font-weight="600" fill="#e7ecf5" text-anchor="middle">Markdown 原文</text>
+  <text x="112" y="120" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">作者在后台写</text>
+  <text x="112" y="138" font-size="11" fill="#f07575" text-anchor="middle">可以嵌 HTML</text>
+
+  <rect x="214" y="64" width="164" height="88" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="296" y="96" font-size="16" font-weight="600" fill="#e7ecf5" text-anchor="middle">marked.parse</text>
+  <text x="296" y="120" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">marked 18.2</text>
+  <text x="296" y="138" font-size="11" fill="#98a5bb" text-anchor="middle">得到原始 HTML</text>
+
+  <rect x="398" y="64" width="164" height="88" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="480" y="96" font-size="16" font-weight="600" fill="#e7ecf5" text-anchor="middle">代码高亮</text>
+  <text x="480" y="120" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">marked-highlight</text>
+  <text x="480" y="138" font-size="11" fill="#98a5bb" text-anchor="middle">hljs 11 种语言</text>
+
+  <rect x="582" y="64" width="164" height="88" fill="#111826" stroke="#58c7c0" stroke-width="1.5" rx="10"/>
+  <text x="664" y="96" font-size="16" font-weight="600" fill="#e7ecf5" text-anchor="middle">DOMPurify</text>
+  <text x="664" y="120" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">3.4.17 白名单</text>
+  <text x="664" y="138" font-size="11" fill="#58c7c0" text-anchor="middle">剥标签与属性</text>
+
+  <rect x="766" y="64" width="164" height="88" fill="#111826" stroke="#58c7c0" stroke-width="1.5" rx="10"/>
+  <text x="848" y="96" font-size="16" font-weight="600" fill="#e7ecf5" text-anchor="middle">安全 HTML</text>
+  <text x="848" y="120" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">仍是字符串</text>
+  <text x="848" y="138" font-size="11" fill="#98a5bb" text-anchor="middle">还没碰 DOM</text>
+
+  <path d="M196,108 H210" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M380,108 H394" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M564,108 H578" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M748,108 H762" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 插入 DOM -->
+  <path d="M848,152 V210" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="766" y="214" width="164" height="88" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="10"/>
+  <text x="848" y="246" font-size="16" font-weight="600" fill="#e7ecf5" text-anchor="middle">v-html</text>
+  <text x="848" y="270" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">innerHTML</text>
+  <text x="848" y="288" font-size="11" fill="#98a5bb" text-anchor="middle">浏览器才会执行</text>
+
+  <!-- 被剥掉的内容 -->
+  <path d="M664,152 V186 H560 V210" stroke="#f07575" stroke-width="1.5" fill="none" marker-end="url(#ad)"/>
+  <rect x="30" y="214" width="600" height="112" fill="#111826" stroke="#f07575" stroke-width="1.5" rx="10"/>
+  <text x="46" y="242" font-size="16" font-weight="600" fill="#f07575">被 DOMPurify 剥掉的东西</text>
+  <text x="46" y="268" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">script 标签：&lt;script&gt;alert(document.cookie)&lt;/script&gt;</text>
+  <text x="46" y="288" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">事件属性：&lt;img src=x onerror="fetch('/t?c='+localStorage.token)"&gt;</text>
+  <text x="46" y="308" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">javascript: 链接、iframe、srcdoc、style 表达式</text>
+
+  <!-- 两步 vs 四步 -->
+  <rect x="30" y="352" width="440" height="64" fill="#111826" stroke="#f07575" stroke-width="1.5" rx="10"/>
+  <text x="46" y="378" font-size="15" font-weight="600" fill="#f07575">两步：parse 之后直接 v-html</text>
+  <text x="46" y="400" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">作者写的 HTML 原样进 DOM，安全边界为零</text>
+
+  <rect x="490" y="352" width="440" height="64" fill="#111826" stroke="#58c7c0" stroke-width="1.5" rx="10"/>
+  <text x="506" y="378" font-size="15" font-weight="600" fill="#58c7c0">四步：解析 / 高亮 / 净化 / 插入</text>
+  <text x="506" y="400" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">危险内容在进入 DOM 之前就已经被删掉</text>
+
+  <text x="30" y="448" font-size="13" fill="#98a5bb">四步不是仪式：解析管语法、高亮管颜色、净化管安全，插入才第一次碰 DOM。</text>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>固定窗口与滑动窗口限流对比</title>
+  <desc>固定窗口每分钟清零，攻击者卡在整点前后各发三条，2 秒内可放行 6 条；滑动窗口只统计最近 60 秒，两次突发都被算进去，第 4 条即拒绝。</desc>
+  <defs>
+    <marker id="ra" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f07575"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="480" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">限流窗口：固定窗口的边界漏洞</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">规则都是「60 秒内最多 3 条」，差别只在「怎么数」</text>
+
+  <!-- 上半：固定窗口 -->
+  <text x="30" y="96" fill="#f07575" font-size="13.5" font-weight="600">固定窗口：每分钟把计数器清零</text>
+
+  <line x1="60" y1="150" x2="900" y2="150" stroke="#2a3446" stroke-width="1.5"/>
+  <text x="60" y="142" fill="#5c6980" font-size="11" font-family="ui-monospace, Menlo, monospace">00:00</text>
+  <text x="480" y="142" fill="#5c6980" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">01:00</text>
+  <text x="900" y="142" fill="#5c6980" font-size="11" text-anchor="end" font-family="ui-monospace, Menlo, monospace">02:00</text>
+
+  <rect x="60" y="160" width="420" height="54" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="72" y="182" fill="#98a5bb" font-size="12.5">窗口 A</text>
+  <text x="72" y="202" fill="#58c7c0" font-size="12">放行 3 条</text>
+
+  <rect x="480" y="160" width="420" height="54" fill="#111826" stroke="#f07575" stroke-width="1.5" rx="6"/>
+  <text x="492" y="182" fill="#98a5bb" font-size="12.5">窗口 B（计数器刚清零）</text>
+  <text x="492" y="202" fill="#58c7c0" font-size="12">又放行 3 条</text>
+
+  <rect x="392" y="228" width="176" height="30" fill="#1a1116" stroke="#f07575" stroke-width="1.5" rx="6"/>
+  <text x="480" y="248" fill="#f07575" font-size="12" text-anchor="middle">实际 2 秒内 6 条</text>
+  <path d="M480,226 L480,216" stroke="#f07575" stroke-width="1.5" fill="none" marker-end="url(#ra)"/>
+
+
+  <!-- 下半：滑动窗口 -->
+  <text x="30" y="300" fill="#58c7c0" font-size="13.5" font-weight="600">滑动窗口：只看「最近 60 秒」</text>
+
+  <line x1="60" y1="352" x2="900" y2="352" stroke="#2a3446" stroke-width="1.5"/>
+  <text x="60" y="344" fill="#5c6980" font-size="11" font-family="ui-monospace, Menlo, monospace">00:00</text>
+  <text x="480" y="344" fill="#5c6980" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">01:00</text>
+  <text x="900" y="344" fill="#5c6980" font-size="11" text-anchor="end" font-family="ui-monospace, Menlo, monospace">02:00</text>
+
+  <rect x="67" y="362" width="420" height="54" fill="#13211f" stroke="#58c7c0" stroke-width="1.5" rx="6"/>
+  <text x="80" y="384" fill="#58c7c0" font-size="12.5" font-weight="600">回看窗口：6 条 &gt; 3</text>
+  <text x="80" y="403" fill="#98a5bb" font-size="11.5">00:59 的 3 条 + 01:01 的 3 条，全在窗口内</text>
+
+  <rect x="500" y="362" width="390" height="54" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="512" y="384" fill="#98a5bb" font-size="12.5">窗口外的请求不参与计数</text>
+  <text x="512" y="403" fill="#5c6980" font-size="11.5">过期记录会被清掉，内存不会无限增长</text>
+
+  <text x="30" y="450" fill="#98a5bb" font-size="13">漏洞不在限流逻辑，而在「清零」这个动作制造了一个可被卡点利用的边界。</text>
+</svg>

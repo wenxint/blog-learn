@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="down" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+    <style>
+      .layer { fill: #111826; stroke: #2a3446; stroke-width: 1.5; rx: 10; }
+      .h { fill: #e7ecf5; font-size: 16px; font-weight: 600; }
+      .d { fill: #98a5bb; font-size: 12px; }
+      .m { fill: #5c6980; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .no { fill: #f07575; font-size: 12px; }
+      .yes { fill: #58c7c0; font-size: 12px; }
+      .arr { stroke: #5c6980; stroke-width: 1.5; fill: none; marker-end: url(#down); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="620" fill="#0d131e"/>
+
+  <!-- 层 -->
+  <rect class="layer" x="240" y="20" width="420" height="72"/>
+  <text class="h" x="264" y="48">Handler</text>
+  <text class="d" x="264" y="70">绑参数、调 service、写响应</text>
+  <text class="m" x="620" y="48" text-anchor="end">不许写 SQL</text>
+
+  <rect class="layer" x="240" y="122" width="420" height="72"/>
+  <text class="h" x="264" y="150">Service</text>
+  <text class="d" x="264" y="172">业务校验、事务边界、状态流转</text>
+  <text class="m" x="620" y="150" text-anchor="end">不许碰 HTTP</text>
+
+  <rect class="layer" x="240" y="224" width="420" height="72"/>
+  <text class="h" x="264" y="252">Repository</text>
+  <text class="d" x="264" y="274">SQL、分页、预加载</text>
+  <text class="m" x="620" y="252" text-anchor="end">唯一的 SQL 出口</text>
+
+  <rect class="layer" x="240" y="326" width="420" height="72"/>
+  <text class="h" x="264" y="354">Model</text>
+  <text class="d" x="264" y="376">6 个实体，软删除用 deleted_at</text>
+  <text class="m" x="620" y="354" text-anchor="end">不带业务逻辑</text>
+
+  <rect class="layer" x="240" y="428" width="420" height="72"/>
+  <text class="h" x="264" y="456">MySQL</text>
+  <text class="d" x="264" y="478">utf8mb4 · InnoDB · 6 张表</text>
+  <text class="m" x="620" y="456" text-anchor="end">参数化查询</text>
+
+  <!-- 依赖箭头 -->
+  <path class="arr" d="M450,92 L450,120"/>
+  <path class="arr" d="M450,194 L450,222"/>
+  <path class="arr" d="M450,296 L450,324"/>
+  <path class="arr" d="M450,398 L450,426"/>
+
+  <!-- 侧边说明 -->
+  <text class="yes" x="40" y="66">只能向下依赖</text>
+  <text class="no" x="700" y="300">反向依赖（Service 直接 import Handler）</text>
+  <text class="no" x="700" y="320">会导致循环引用，编译期就会报错</text>
+
+  <!-- 旁路：middleware -->
+  <rect class="layer" x="40" y="122" width="170" height="72" stroke="#f5b942"/>
+  <text class="h" x="60" y="150" font-size="14">Middleware</text>
+  <text class="d" x="60" y="172" >横切：RequestID、日志</text>
+
+  <path stroke="#f5b942" stroke-width="1.5" stroke-dasharray="4 4" fill="none" d="M210,158 L238,158"/>
+
+  <text class="m" x="40" y="560">装配顺序在 router.New 里：middleware → handler → service → repository，全部通过构造函数注入。</text>
+  <text class="m" x="40" y="580">这样 service 写单测时可以塞一个假 repository，不需要真数据库。</text>
+</svg>

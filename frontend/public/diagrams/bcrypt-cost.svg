@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>密码哈希算法对比：MD5 与 bcrypt</title>
+  <desc>MD5/SHA 为快速校验设计，GPU 每秒可试数十亿次；bcrypt 故意慢，单次约 60 毫秒并内置随机盐，把爆破成本放大到不可接受。</desc>
+
+  <rect x="0" y="0" width="960" height="420" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">密码哈希：一个故意变慢的选择</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">同样是哈希，设计目标决定了算法形态</text>
+
+  <!-- 左：快算法 -->
+  <rect x="30" y="82" width="420" height="188" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="50" y="112" fill="#e7ecf5" font-size="16" font-weight="600">MD5 / SHA-256</text>
+  <text x="50" y="134" fill="#98a5bb" font-size="12.5">为「校验文件完整性」设计</text>
+  <text x="50" y="166" fill="#98a5bb" font-size="13">一次计算：微秒级</text>
+  <text x="50" y="194" fill="#98a5bb" font-size="13">GPU 每秒可尝试数十亿次</text>
+  <text x="50" y="222" fill="#f07575" font-size="13">随机盐要自己加，容易漏</text>
+  <text x="50" y="250" fill="#5c6980" font-size="11.5" font-family="ui-monospace, Menlo, monospace">fast → 适合校验，不适合存密码</text>
+
+  <!-- 右：bcrypt -->
+  <rect x="510" y="82" width="420" height="188" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="10"/>
+  <text x="530" y="112" fill="#e7ecf5" font-size="16" font-weight="600">bcrypt cost=10</text>
+  <text x="530" y="134" fill="#98a5bb" font-size="12.5">为「存密码」设计</text>
+  <text x="530" y="166" fill="#98a5bb" font-size="13">一次计算：约 60ms（量级示意）</text>
+  <text x="530" y="194" fill="#98a5bb" font-size="13">cost 每 +1，耗时翻倍</text>
+  <text x="530" y="222" fill="#58c7c0" font-size="13">内置随机盐，两次结果不同但都能验通过</text>
+  <text x="530" y="250" fill="#5c6980" font-size="11.5" font-family="ui-monospace, Menlo, monospace">deliberately slow → 攻击者也被拖慢</text>
+
+  <!-- 攻击者成本 -->
+  <rect x="30" y="292" width="900" height="66" fill="#0b0f16" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="50" y="317" fill="#e7ecf5" font-size="13.5" font-weight="600">攻击者视角：猜 100 万次要多久？</text>
+  <text x="50" y="341" fill="#98a5bb" font-size="12.5">MD5 / SHA：几秒就能跑完　　·　　bcrypt：按单次 60ms 估算，约 17 小时</text>
+
+  <text x="30" y="396" fill="#98a5bb" font-size="13">慢不是缺陷，是防线本身：用 60ms 的登录延迟，换掉可被批量爆破的可能。</text>
+</svg>

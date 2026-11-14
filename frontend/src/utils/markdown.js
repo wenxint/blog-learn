@@ -44,6 +44,39 @@ hljs.registerLanguage('html', xml)
 hljs.registerLanguage('xml', xml)
 hljs.registerLanguage('vue', xml) // highlight.js 没有 vue 语法，用 xml 兜底
 
+// 属性值转义：markdown 里的 alt/title 是作者可控文本，
+// 直接拼进 HTML 属性会被 " 逃逸出标签（DOMPurify 虽然会兜底，但没必要让它兜）。
+function escapeAttr(text = '') {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// 图片渲染：<figure> + alt 当图注。
+//
+// 这个博客的插图都是「讲解图」而不是配图，图本身要能独立说清一件事。
+// 所以约定 alt 不写「图1」，而是写一句完整结论（20-45 字），
+// 渲染时把它同时用作无障碍描述和可见图注——一张图配一句话，扫一眼就懂。
+// 外层再包一个链接，点开可以在新标签页看原始 SVG 大图。
+function renderFigure({ href, title, text }) {
+  const alt = (text || '').trim()
+  const src = escapeAttr(href || '')
+  const altAttr = escapeAttr(alt)
+  const titleAttr = title ? ` title="${escapeAttr(title)}"` : ''
+
+  return [
+    '<figure class="md-figure">',
+    `<a class="md-figure-link" href="${src}" target="_blank" rel="noopener">`,
+    `<img src="${src}" alt="${altAttr}"${titleAttr} loading="lazy" decoding="async" />`,
+    '</a>',
+    alt ? `<figcaption>${escapeAttr(alt)}</figcaption>` : '',
+    '</figure>',
+  ].join('')
+}
+
 // 代码高亮。
 //
 // 注意：marked v5 之后删掉了 setOptions({ highlight })，老教程里的写法已经失效，
@@ -65,6 +98,9 @@ const marked = new Marked(
   {
     breaks: true, // 单个换行也当 <br>，符合博客写作习惯
     gfm: true, // 支持表格、删除线等 GitHub 风格
+    renderer: {
+      image: renderFigure,
+    },
   },
 )
 
@@ -76,8 +112,11 @@ const marked = new Marked(
 export function renderMarkdown(raw) {
   if (!raw) return ''
   const html = marked.parse(raw)
+  // marked 会把独占一段的图片包进 <p>，但 <figure> 不能嵌在 <p> 里。
+  // 浏览器虽然会自动纠正，但会留下一个空 <p> 撑出多余间距，这里先摘掉。
+  const normalized = html.replace(/<p>\s*(<figure[\s\S]*?<\/figure>)\s*<\/p>/g, '$1')
   // 允许的标签/属性由 DOMPurify 默认白名单决定，足够覆盖博客排版
-  return DOMPurify.sanitize(html, {
+  return DOMPurify.sanitize(normalized, {
     ADD_ATTR: ['target', 'rel'],
   })
 }

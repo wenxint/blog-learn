@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 580" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>同一段恶意正文在两种渲染方式下的结果</title>
+  <desc>左边不过 DOMPurify：marked 原样输出 HTML，v-html 插入后图片加载失败触发 onerror，脚本把 localStorage 里的 token 发到攻击者域名。右边过 DOMPurify：onerror 属性被白名单删掉，只剩一个无害的 img 标签，没有任何代码执行。</desc>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+    <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f07575"/>
+    </marker>
+    <marker id="at" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#58c7c0"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="580" fill="#0d131e"/>
+
+  <text x="30" y="34" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace">同一段正文，只差一次 DOMPurify.sanitize()</text>
+
+  <!-- 左：不净化 -->
+  <rect x="30" y="56" width="440" height="434" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="54" y="92" font-size="17" font-weight="600" fill="#f07575">不过 DOMPurify</text>
+  <text x="54" y="114" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace">marked.parse → v-html</text>
+
+  <rect x="54" y="130" width="392" height="76" fill="#0d131e" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="70" y="156" font-size="13" fill="#e7ecf5">作者在正文里写</text>
+  <text x="70" y="178" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">&lt;img src=x onerror="fetch('/t?c='+</text>
+  <text x="70" y="196" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">localStorage.token)"&gt;</text>
+
+  <path d="M250,206 V222" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="54" y="226" width="392" height="76" fill="#0d131e" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="70" y="252" font-size="13" fill="#e7ecf5">marked 原样输出</text>
+  <text x="70" y="274" font-size="11" fill="#f07575" font-family="ui-monospace, Menlo, monospace">HTML 原封不动，没有白名单参与</text>
+
+  <path d="M250,302 V318" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="54" y="322" width="392" height="76" fill="#0d131e" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="70" y="348" font-size="13" fill="#e7ecf5">v-html 把字符串插进 DOM</text>
+  <text x="70" y="370" font-size="11" fill="#f07575" font-family="ui-monospace, Menlo, monospace">图片加载失败，onerror 立刻触发</text>
+
+  <path d="M250,398 V412" stroke="#f07575" stroke-width="1.5" fill="none" marker-end="url(#ad)"/>
+  <rect x="54" y="416" width="392" height="58" fill="#111826" stroke="#f07575" stroke-width="1.5" rx="8"/>
+  <text x="70" y="442" font-size="13" font-weight="600" fill="#f07575">脚本执行，token 被带走</text>
+  <text x="70" y="462" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">token 拼进 URL，发往攻击者域名</text>
+
+  <!-- 中间 -->
+  <text x="480" y="270" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">vs</text>
+
+  <!-- 右：过净化 -->
+  <rect x="490" y="56" width="440" height="434" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="10"/>
+  <text x="514" y="92" font-size="17" font-weight="600" fill="#58c7c0">过 DOMPurify</text>
+  <text x="514" y="114" font-size="11" fill="#5c6980" font-family="ui-monospace, Menlo, monospace">marked.parse → sanitize → v-html</text>
+
+  <rect x="514" y="130" width="392" height="76" fill="#0d131e" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="530" y="156" font-size="13" fill="#e7ecf5">同一段正文</text>
+  <text x="530" y="178" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">&lt;img src=x onerror="fetch('/t?c='+</text>
+  <text x="530" y="196" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">localStorage.token)"&gt;</text>
+
+  <path d="M710,206 V222" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="514" y="226" width="392" height="76" fill="#0d131e" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="530" y="252" font-size="13" fill="#e7ecf5">白名单只留合法属性</text>
+  <text x="530" y="274" font-size="11" fill="#58c7c0" font-family="ui-monospace, Menlo, monospace">onerror 不在白名单，直接删掉</text>
+
+  <path d="M710,302 V318" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="514" y="322" width="392" height="76" fill="#0d131e" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="530" y="348" font-size="13" fill="#e7ecf5">只剩一个 img 标签</text>
+  <text x="530" y="370" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">src 保留，alt 保留，事件属性归零</text>
+
+  <path d="M710,398 V412" stroke="#58c7c0" stroke-width="1.5" fill="none" marker-end="url(#at)"/>
+  <rect x="514" y="416" width="392" height="58" fill="#111826" stroke="#58c7c0" stroke-width="1.5" rx="8"/>
+  <text x="530" y="442" font-size="13" font-weight="600" fill="#58c7c0">没有可执行的代码</text>
+  <text x="530" y="462" font-size="11" fill="#98a5bb" font-family="ui-monospace, Menlo, monospace">图片裂了，但什么都没发生</text>
+
+  <text x="30" y="548" font-size="13" fill="#98a5bb">净化不负责把文章变好看，它只保证一件事：正文里没有能执行的代码。</text>
+</svg>

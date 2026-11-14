@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 450" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>联合索引列顺序对比</title>
+  <desc>status 在前的索引可以先定位等值条件，再沿叶子链表反向读出已排序的发布时间；published_at 在前的索引只能按时间扫，过滤后仍需 filesort。</desc>
+
+  <rect x="0" y="0" width="960" height="450" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">同样的两列，顺序决定能不能「免费排序」</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">查询：WHERE status = 1 ORDER BY published_at DESC LIMIT 10</text>
+
+  <!-- A -->
+  <rect x="30" y="78" width="430" height="230" fill="#111826" stroke="#58c7c0" stroke-width="1.5" rx="10"/>
+  <text x="50" y="106" fill="#58c7c0" font-size="14" font-weight="600">方案 A：INDEX (status, published_at)</text>
+  <text x="50" y="126" fill="#5c6980" font-size="11" font-family="ui-monospace, Menlo, monospace">等值列在前，排序列在后</text>
+
+  <rect x="50" y="142" width="390" height="32" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="64" y="163" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">status=1 · 2026-11-03 10:00</text>
+  <rect x="50" y="180" width="390" height="32" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="64" y="201" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">status=1 · 2026-11-02 09:00</text>
+  <rect x="50" y="218" width="390" height="32" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="64" y="239" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">status=1 · 2026-11-01 08:00</text>
+
+  <text x="50" y="274" fill="#58c7c0" font-size="11.5">定位到 status=1 → 沿叶子反向读 10 条就停</text>
+  <text x="50" y="294" fill="#5c6980" font-size="11">Extra 为空：排序由索引直接提供</text>
+
+  <!-- B -->
+  <rect x="500" y="78" width="430" height="230" fill="#111826" stroke="#f07575" stroke-width="1.5" rx="10"/>
+  <text x="520" y="106" fill="#f07575" font-size="14" font-weight="600">方案 B：INDEX (published_at, status)</text>
+  <text x="520" y="126" fill="#5c6980" font-size="11" font-family="ui-monospace, Menlo, monospace">排序列在前，等值列在后</text>
+
+  <rect x="520" y="142" width="390" height="32" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="534" y="163" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">2026-11-03 · status=0（草稿，丢掉）</text>
+  <rect x="520" y="180" width="390" height="32" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="534" y="201" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">2026-11-02 · status=1（留下）</text>
+  <rect x="520" y="218" width="390" height="32" fill="#0b0f16" stroke="#2a3446" rx="5"/>
+  <text x="534" y="239" fill="#98a5bb" font-size="11.5" font-family="ui-monospace, Menlo, monospace">2026-11-01 · status=0（草稿，丢掉）</text>
+
+  <text x="520" y="274" fill="#f07575" font-size="11.5">按时间逐条扫，过滤后才能凑够 10 条</text>
+  <text x="520" y="294" fill="#5c6980" font-size="11">草稿越多扫得越久；优化器可能直接放弃索引</text>
+
+  <rect x="30" y="330" width="900" height="62" fill="#0b0f16" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="50" y="355" fill="#58c7c0" font-size="12.5">A：EXPLAIN 的 Extra 没有 Using filesort —— 索引扫描即有序，LIMIT 真的能提前结束</text>
+  <text x="50" y="377" fill="#f07575" font-size="12.5">B：Extra 出现 Using where; Using filesort —— 结果取出来后在服务器层再排序</text>
+
+  <text x="30" y="426" fill="#98a5bb" font-size="13">建联合索引前先拆查询：哪些列做等值、哪些列做排序、哪些列是范围 —— 顺序就出来了。</text>
+</svg>

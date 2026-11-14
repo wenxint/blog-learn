@@ -2,7 +2,7 @@
 // 文章详情页：正文 + 评论
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { createComment, fetchArticleDetail, fetchComments } from '../api/article'
+import { createComment, fetchArticleDetail, fetchArticles, fetchComments } from '../api/article'
 import { formatDate } from '../utils/format'
 import { renderMarkdown } from '../utils/markdown'
 // 代码高亮主题（github 风格浅色）
@@ -14,6 +14,9 @@ const router = useRouter()
 
 const article = ref(null)
 const comments = ref([])
+// 同分类下的文章，用来在文末拼出「系列目录」。
+// 不额外加接口：列表接口本来就支持按 category_id 筛选。
+const series = ref([])
 const loading = ref(true)
 const submitting = ref(false)
 const form = ref({ nickname: '', email: '', content: '' })
@@ -28,6 +31,19 @@ async function load() {
     article.value = await fetchArticleDetail(route.params.id)
     const data = await fetchComments(route.params.id)
     comments.value = data.list || []
+
+    // 系列目录失败不影响正文阅读，所以单独 try/catch，不让整个页面 404
+    if (article.value?.category_id) {
+      try {
+        const list = await fetchArticles({
+          category_id: article.value.category_id,
+          page_size: 100,
+        })
+        series.value = list.list || []
+      } catch {
+        series.value = []
+      }
+    }
   } catch {
     // 文章不存在或已删除时，回首页而不是停在白屏
     router.replace('/')
@@ -115,6 +131,27 @@ onUnmounted(() => {
           </ElTag>
         </div>
       </article>
+
+      <!-- 系列目录：同一分类下的全部文章，按发布时间倒序（这里恰好是 01→13 的阅读顺序） -->
+      <nav v-if="series.length > 1" class="series-nav" aria-label="同系列文章">
+        <h3 class="series-title">
+          系列目录
+          <span class="series-count">{{ series.length }} 篇</span>
+        </h3>
+        <ol class="series-list">
+          <li v-for="item in series" :key="item.id">
+            <RouterLink
+              :to="`/article/${item.id}`"
+              class="series-link"
+              :class="{ 'series-link--current': item.id === article.id }"
+              :aria-current="item.id === article.id ? 'page' : undefined"
+            >
+              <span class="series-name">{{ item.title }}</span>
+              <span v-if="item.id === article.id" class="series-now">当前</span>
+            </RouterLink>
+          </li>
+        </ol>
+      </nav>
 
       <!-- 评论区 -->
       <section class="comments">
@@ -366,6 +403,57 @@ onUnmounted(() => {
   border-radius: 0.5rem;
 }
 
+/* ───────── 讲解图 ─────────
+   文章里的图不是装饰，是「把结构讲清楚」的一部分。
+   统一样式：整幅宽度、细边框、等宽字图注；点击可看原始大图。
+   SVG 本身带深色底，边框让它在正文里有一块明确的「图版」区域。 */
+.markdown-body :deep(.md-figure) {
+  margin: 2.25em 0;
+}
+
+/* 桌面端让讲解图突破正文 42rem 的行宽，按 56rem 展示。
+   图里的字号是按 960 宽画的，缩到 672 会小到看不清；
+   正文仍然保持 42rem 行宽，只有图「破格」加宽，阅读节奏不变。 */
+@media (min-width: 64rem) {
+  .markdown-body :deep(.md-figure) {
+    width: min(56rem, calc(100vw - 4rem));
+    max-width: none;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.markdown-body :deep(.md-figure-link) {
+  display: block;
+  text-decoration: none;
+  border-radius: 0.625rem;
+}
+
+.markdown-body :deep(.md-figure img) {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.625rem;
+  background: #0d131e;
+  cursor: zoom-in;
+  transition: border-color 0.15s ease;
+}
+
+.markdown-body :deep(.md-figure-link:hover img) {
+  border-color: var(--amber);
+}
+
+.markdown-body :deep(.md-figure figcaption) {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: var(--ink-3);
+  text-align: center;
+  text-wrap: balance;
+}
+
 .markdown-body :deep(hr) {
   border: none;
   border-top: 1px solid var(--line);
@@ -378,6 +466,78 @@ onUnmounted(() => {
   flex-wrap: wrap;
   padding-top: 1.5rem;
   border-top: 1px solid var(--line);
+}
+
+/* ───────── 系列目录 ───────── */
+.series-nav {
+  max-width: var(--measure);
+  margin: 3rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.series-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+}
+
+.series-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.series-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: series;
+}
+
+.series-list li {
+  counter-increment: series;
+}
+
+.series-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  transition: color 0.15s ease;
+}
+
+.series-link::before {
+  content: counter(series, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--ink-3);
+}
+
+.series-link:hover {
+  color: var(--ink);
+}
+
+.series-link--current {
+  color: var(--amber);
+}
+
+.series-link--current::before {
+  color: var(--amber);
+}
+
+.series-now {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--amber);
 }
 
 /* ───────── 评论 ───────── */

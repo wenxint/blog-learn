@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>建站系列 13 篇的结构</title>
+  <desc>系列分五部分：总览 1 篇、后端 6 篇、前端 2 篇、部署 3 篇、复盘 1 篇，按 01 到 13 的顺序阅读，概念逐篇递进。</desc>
+
+  <rect x="0" y="0" width="960" height="430" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">13 篇是一条线，不是一堆文章</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">总览 → 后端 → 前端 → 部署 → 复盘，每一步都建立在前一步上</text>
+
+  <!-- 时间线 -->
+  <line x1="170" y1="106" x2="170" y2="374" stroke="#2a3446" stroke-width="1.5"/>
+  <circle cx="170" cy="106" r="4" fill="#f5b942"/>
+  <circle cx="170" cy="170" r="4" fill="#98a5bb"/>
+  <circle cx="170" cy="234" r="4" fill="#98a5bb"/>
+  <circle cx="170" cy="298" r="4" fill="#f5b942"/>
+  <circle cx="170" cy="362" r="4" fill="#98a5bb"/>
+
+  <!-- 总览 -->
+  <text x="30" y="102" fill="#e7ecf5" font-size="12.5" font-weight="600">总览 · 1 篇</text>
+  <text x="30" y="120" fill="#5c6980" font-size="10.5">先建立全貌</text>
+
+  <rect x="190" y="82" width="130" height="50" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="6"/>
+  <text x="202" y="102" fill="#f5b942" font-size="10.5" font-family="ui-monospace, Menlo, monospace">01</text>
+  <text x="202" y="120" fill="#e7ecf5" font-size="11.5">整体架构</text>
+
+  <!-- 后端 -->
+  <text x="30" y="166" fill="#e7ecf5" font-size="12.5" font-weight="600">后端 · 6 篇</text>
+  <text x="30" y="184" fill="#5c6980" font-size="10.5">本系列重点</text>
+
+  <rect x="190" y="146" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="200" y="166" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">02</text>
+  <text x="200" y="184" fill="#e7ecf5" font-size="11">请求的旅程</text>
+
+  <rect x="307" y="146" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="317" y="166" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">03</text>
+  <text x="317" y="184" fill="#e7ecf5" font-size="11">后端分层</text>
+
+  <rect x="424" y="146" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="434" y="166" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">04</text>
+  <text x="434" y="184" fill="#e7ecf5" font-size="11">数据与索引</text>
+
+  <rect x="541" y="146" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="551" y="166" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">05</text>
+  <text x="551" y="184" fill="#e7ecf5" font-size="11">登录与鉴权</text>
+
+  <rect x="658" y="146" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="668" y="166" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">06</text>
+  <text x="668" y="184" fill="#e7ecf5" font-size="11">评论与限流</text>
+
+  <rect x="775" y="146" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="785" y="166" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">07</text>
+  <text x="785" y="184" fill="#e7ecf5" font-size="11">上传与静态</text>
+
+  <!-- 前端 -->
+  <text x="30" y="230" fill="#e7ecf5" font-size="12.5" font-weight="600">前端 · 2 篇</text>
+  <text x="30" y="248" fill="#5c6980" font-size="10.5">怎么消费接口</text>
+
+  <rect x="190" y="210" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="200" y="230" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">08</text>
+  <text x="200" y="248" fill="#e7ecf5" font-size="11">前端对接</text>
+
+  <rect x="307" y="210" width="105" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="317" y="230" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">09</text>
+  <text x="317" y="248" fill="#e7ecf5" font-size="11">Markdown</text>
+
+  <!-- 部署 -->
+  <text x="30" y="294" fill="#e7ecf5" font-size="12.5" font-weight="600">部署 · 3 篇</text>
+  <text x="30" y="312" fill="#5c6980" font-size="10.5">本系列重点</text>
+
+  <rect x="190" y="274" width="105" height="50" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="6"/>
+  <text x="200" y="294" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">10</text>
+  <text x="200" y="312" fill="#e7ecf5" font-size="11">构建与发布</text>
+
+  <rect x="307" y="274" width="105" height="50" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="6"/>
+  <text x="317" y="294" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">11</text>
+  <text x="317" y="312" fill="#e7ecf5" font-size="11">生产配置</text>
+
+  <rect x="424" y="274" width="105" height="50" fill="#111826" stroke="#f5b942" stroke-width="1.5" rx="6"/>
+  <text x="434" y="294" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">12</text>
+  <text x="434" y="312" fill="#e7ecf5" font-size="11">上线实录</text>
+
+  <!-- 复盘 -->
+  <text x="30" y="358" fill="#e7ecf5" font-size="12.5" font-weight="600">复盘 · 1 篇</text>
+  <text x="30" y="376" fill="#5c6980" font-size="10.5">把账算清</text>
+
+  <rect x="190" y="338" width="130" height="50" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="200" y="358" fill="#f5b942" font-size="10" font-family="ui-monospace, Menlo, monospace">13</text>
+  <text x="200" y="376" fill="#e7ecf5" font-size="11">取舍与下一步</text>
+
+  <text x="30" y="414" fill="#98a5bb" font-size="12.5">每篇都能独立读，但按顺序读概念才连得上；想直接看上线，可以从 10 → 11 → 12 开始。</text>
+</svg>

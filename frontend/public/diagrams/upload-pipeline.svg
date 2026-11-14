@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>图片上传与访问的两条路径</title>
+  <desc>上传是动态请求：经过鉴权、大小校验、内容嗅探、Seek 回退和随机名落盘；访问是静态请求：生产环境交给 Nginx 直接发文件，不经过 Go。</desc>
+  <defs>
+    <marker id="ua" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="470" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">上传是动态请求，访问是静态请求</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">同一条业务链路，在部署时要拆成两条路径分别优化</text>
+
+  <!-- 上行：上传 -->
+  <text x="30" y="92" fill="#f5b942" font-size="11.5" font-family="ui-monospace, Menlo, monospace">POST /api/v1/admin/upload　（动态）</text>
+
+  <rect x="30" y="104" width="210" height="62" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="46" y="129" fill="#e7ecf5" font-size="13" font-weight="600">浏览器</text>
+  <text x="46" y="149" fill="#98a5bb" font-size="11">multipart/form-data</text>
+
+  <rect x="280" y="104" width="190" height="62" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="296" y="129" fill="#e7ecf5" font-size="13" font-weight="600">鉴权中间件</text>
+  <text x="296" y="149" fill="#98a5bb" font-size="11">必须是登录用户</text>
+
+  <rect x="510" y="104" width="190" height="62" fill="#111826" stroke="#58c7c0" stroke-width="1.5" rx="8"/>
+  <text x="526" y="129" fill="#e7ecf5" font-size="13" font-weight="600">UploadService</text>
+  <text x="526" y="149" fill="#98a5bb" font-size="11">校验 + 嗅探 + 落盘</text>
+
+  <rect x="740" y="104" width="190" height="62" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="756" y="129" fill="#e7ecf5" font-size="13" font-weight="600">磁盘</text>
+  <text x="756" y="149" fill="#98a5bb" font-size="11" font-family="ui-monospace, Menlo, monospace">uploads/2026/11/…png</text>
+
+  <path d="M240,135 L278,135" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+  <path d="M470,135 L508,135" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+  <path d="M700,135 L738,135" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+
+  <!-- 中间：Save 内部 -->
+  <rect x="30" y="192" width="900" height="126" fill="#0b0f16" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="48" y="216" fill="#e7ecf5" font-size="12.5" font-weight="600">Save 内部四步：任何一步反过来，都会出安全问题或坏文件</text>
+
+  <rect x="46" y="230" width="196" height="66" fill="#111826" stroke="#2a3446" rx="6"/>
+  <text x="58" y="252" fill="#f5b942" font-size="11" font-family="ui-monospace, Menlo, monospace">① 大小上限</text>
+  <text x="58" y="272" fill="#98a5bb" font-size="10.5">≤ UPLOAD_MAX_MB</text>
+
+  <rect x="266" y="230" width="216" height="66" fill="#111826" stroke="#2a3446" rx="6"/>
+  <text x="278" y="252" fill="#f5b942" font-size="11" font-family="ui-monospace, Menlo, monospace">② 嗅探前 512 字节</text>
+  <text x="278" y="272" fill="#98a5bb" font-size="10.5">DetectContentType，不看扩展名</text>
+
+  <rect x="506" y="230" width="182" height="66" fill="#111826" stroke="#f07575" rx="6"/>
+  <text x="518" y="252" fill="#f07575" font-size="11" font-family="ui-monospace, Menlo, monospace">③ Seek(0) 回退</text>
+  <text x="518" y="272" fill="#98a5bb" font-size="10.5">漏了会存出坏文件</text>
+
+  <rect x="712" y="230" width="202" height="66" fill="#111826" stroke="#2a3446" rx="6"/>
+  <text x="724" y="252" fill="#f5b942" font-size="11" font-family="ui-monospace, Menlo, monospace">④ 随机名 + 年月目录</text>
+  <text x="724" y="272" fill="#98a5bb" font-size="10.5">彻底消除路径穿越</text>
+
+  <path d="M242,263 L264,263" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+  <path d="M482,263 L504,263" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+  <path d="M688,263 L710,263" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+
+  <!-- 下行：访问 -->
+  <text x="30" y="358" fill="#58c7c0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">GET /uploads/2026/11/xxx.png　（静态）</text>
+
+  <rect x="30" y="370" width="240" height="58" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="46" y="394" fill="#e7ecf5" font-size="13" font-weight="600">浏览器 / 文章页</text>
+  <text x="46" y="413" fill="#98a5bb" font-size="11">img src 指向相对路径</text>
+
+  <rect x="310" y="370" width="280" height="58" fill="#13211f" stroke="#58c7c0" stroke-width="1.5" rx="8"/>
+  <text x="326" y="394" fill="#e7ecf5" font-size="13" font-weight="600">Nginx：alias 或反代</text>
+  <text x="326" y="413" fill="#98a5bb" font-size="11">生产直接发文件，不经过 Go</text>
+
+  <rect x="630" y="370" width="300" height="58" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="8"/>
+  <text x="646" y="394" fill="#e7ecf5" font-size="13" font-weight="600">缓存 30 天</text>
+  <text x="646" y="413" fill="#98a5bb" font-size="11">expires 30d；文件名带随机后缀，可放心缓存</text>
+
+  <path d="M270,399 L308,399" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+  <path d="M590,399 L628,399" stroke="#5c6980" stroke-width="1.5" fill="none" marker-end="url(#ua)"/>
+
+  <text x="30" y="458" fill="#98a5bb" font-size="12.5">上传链路每个输入都不可信（文件名、Content-Type、大小）；访问链路只认文件路径，越简单越快。</text>
+</svg>

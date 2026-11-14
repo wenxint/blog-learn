@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="s1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+    <marker id="s2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#58c7c0"/>
+    </marker>
+    <style>
+      .b { fill: #111826; stroke: #2a3446; stroke-width: 1.5; rx: 9; }
+      .b-a { stroke: #f5b942; }
+      .t { fill: #e7ecf5; font-size: 13px; font-weight: 600; }
+      .d { fill: #98a5bb; font-size: 11px; }
+      .m { fill: #5c6980; font-size: 10.5px; font-family: ui-monospace, Menlo, monospace; }
+      .f { stroke: #5c6980; stroke-width: 1.5; fill: none; marker-end: url(#s1); }
+      .r { stroke: #58c7c0; stroke-width: 1.5; fill: none; marker-end: url(#s2); stroke-dasharray: 4 3; }
+      .cap { fill: #f5b942; font-size: 12px; font-weight: 600; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="520" fill="#0d131e"/>
+
+  <text class="cap" x="30" y="34">登录：签发令牌</text>
+
+  <!-- 第一行 -->
+  <rect class="b" x="30" y="50" width="170" height="82"/>
+  <text class="t" x="46" y="76">1 提交账号密码</text>
+  <text class="d" x="46" y="98">POST /auth/login</text>
+  <text class="m" x="46" y="118">明文只在 HTTPS 里走</text>
+
+  <rect class="b" x="240" y="50" width="180" height="82"/>
+  <text class="t" x="256" y="76">2 查用户</text>
+  <text class="d" x="256" y="98">按 username 找记录</text>
+  <text class="m" x="256" y="118">找不到统一报「用户名或密码错误」</text>
+
+  <rect class="b b-a" x="460" y="50" width="200" height="82"/>
+  <text class="t" x="476" y="76">3 bcrypt 比对</text>
+  <text class="d" x="476" y="98">CompareHashAndPassword</text>
+  <text class="m" x="476" y="118">cost=10，约 60ms，故意慢</text>
+
+  <rect class="b" x="700" y="50" width="270" height="82"/>
+  <text class="t" x="716" y="76">4 签发 JWT</text>
+  <text class="d" x="716" y="98">HS256(header.payload.signature)</text>
+  <text class="m" x="716" y="118">payload 有 user_id / role / exp</text>
+
+  <path class="f" d="M200,91 L238,91"/>
+  <path class="f" d="M420,91 L458,91"/>
+  <path class="f" d="M660,91 L698,91"/>
+
+  <text class="cap" x="30" y="200">之后每次请求：校验令牌</text>
+
+  <!-- 第二行 -->
+  <rect class="b" x="30" y="216" width="190" height="82"/>
+  <text class="t" x="46" y="242">5 带令牌请求</text>
+  <text class="d" x="46" y="264">Authorization: Bearer …</text>
+  <text class="m" x="46" y="284">前端拦截器自动加</text>
+
+  <rect class="b b-a" x="260" y="216" width="220" height="82"/>
+  <text class="t" x="276" y="242">6 中间件验签</text>
+  <text class="d" x="276" y="264">验签名 + 查 exp</text>
+  <text class="m" x="276" y="284">失败 → 401，前端清 token 跳登录</text>
+
+  <rect class="b" x="520" y="216" width="200" height="82"/>
+  <text class="t" x="536" y="242">7 注入 context</text>
+  <text class="d" x="536" y="264">user_id / role</text>
+  <text class="m" x="536" y="284">Handler 从 ctx 取，不再查库</text>
+
+  <rect class="b" x="760" y="216" width="210" height="82"/>
+  <text class="t" x="776" y="242">8 权限判断</text>
+  <text class="d" x="776" y="264">admin 才能删文章</text>
+  <text class="m" x="776" y="284">role 已随令牌带上</text>
+
+  <path class="f" d="M220,257 L258,257"/>
+  <path class="f" d="M480,257 L518,257"/>
+  <path class="f" d="M720,257 L758,257"/>
+
+  <!-- 无状态的代价 -->
+  <rect class="b" x="30" y="350" width="940" height="90" stroke="#f07575"/>
+  <text class="t" x="50" y="378" fill="#f07575">无状态的代价：服务端不保存会话，所以「主动踢人」做不到</text>
+  <text class="d" x="50" y="402">改密码、封号、换设备登录都不会让已发出的令牌立刻失效 —— 只能等 exp 到期（本项目 24 小时）。</text>
+  <text class="m" x="50" y="424">要支持「立刻失效」就得引黑名单（Redis），那又回到有状态了。这是 JWT 最真实的取舍。</text>
+
+  <text class="m" x="30" y="490">JWT 签名保证令牌没被篡改，但不保证保密：payload 只是 base64，任何人都能解开看。所以里面不能放密码、手机号这类字段。</text>
+</svg>

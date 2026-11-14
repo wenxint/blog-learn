@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <title>五个关键架构取舍</title>
+  <desc>部署形态、限流、文件存储、认证和渲染方式各自的当前选择、付出的代价，以及应该更换的触发条件。</desc>
+
+  <rect x="0" y="0" width="960" height="500" fill="#0d131e"/>
+
+  <text x="30" y="36" fill="#e7ecf5" font-size="17" font-weight="600">五个关键取舍：选择、代价、触发条件</text>
+  <text x="30" y="58" fill="#98a5bb" font-size="13">没有「最优解」，只有「当前约束下的解」——最后一列比第一列更重要</text>
+
+  <!-- 表头 -->
+  <rect x="30" y="80" width="900" height="42" fill="#111826" stroke="#2a3446" stroke-width="1.5" rx="6"/>
+  <text x="46" y="106" fill="#f5b942" font-size="12" font-weight="600">决策</text>
+  <text x="206" y="106" fill="#f5b942" font-size="12" font-weight="600">当前选择</text>
+  <text x="426" y="106" fill="#f5b942" font-size="12" font-weight="600">付出的代价</text>
+  <text x="706" y="106" fill="#f5b942" font-size="12" font-weight="600">什么条件下换</text>
+
+  <!-- 行 1 -->
+  <rect x="30" y="128" width="900" height="60" fill="#0b0f16" stroke="#2a3446" rx="6"/>
+  <text x="46" y="163" fill="#e7ecf5" font-size="11.5" font-weight="600">部署形态</text>
+  <text x="206" y="163" fill="#98a5bb" font-size="11">单体：一机一进程</text>
+  <text x="426" y="163" fill="#98a5bb" font-size="11">不能独立扩容，故障不隔离</text>
+  <text x="706" y="163" fill="#58c7c0" font-size="11">有独立团队 / 流量差异大</text>
+
+  <!-- 行 2 -->
+  <rect x="30" y="196" width="900" height="60" fill="#0b0f16" stroke="#2a3446" rx="6"/>
+  <text x="46" y="231" fill="#e7ecf5" font-size="11.5" font-weight="600">限流</text>
+  <text x="206" y="231" fill="#98a5bb" font-size="11">进程内滑动窗口</text>
+  <text x="426" y="231" fill="#98a5bb" font-size="11">多实例不共享，重启清零</text>
+  <text x="706" y="231" fill="#58c7c0" font-size="11">部署第二个实例之前</text>
+
+  <!-- 行 3 -->
+  <rect x="30" y="264" width="900" height="60" fill="#0b0f16" stroke="#2a3446" rx="6"/>
+  <text x="46" y="299" fill="#e7ecf5" font-size="11.5" font-weight="600">文件存储</text>
+  <text x="206" y="299" fill="#98a5bb" font-size="11">本地磁盘 uploads/</text>
+  <text x="426" y="299" fill="#98a5bb" font-size="11">备份要连目录，扩容要迁数据</text>
+  <text x="706" y="299" fill="#58c7c0" font-size="11">图片量上来 / 多机部署</text>
+
+  <!-- 行 4 -->
+  <rect x="30" y="332" width="900" height="60" fill="#0b0f16" stroke="#2a3446" rx="6"/>
+  <text x="46" y="367" fill="#e7ecf5" font-size="11.5" font-weight="600">认证</text>
+  <text x="206" y="367" fill="#98a5bb" font-size="11">无状态 JWT</text>
+  <text x="426" y="367" fill="#98a5bb" font-size="11">不能立刻踢人，改密后旧 token 仍有效</text>
+  <text x="706" y="367" fill="#58c7c0" font-size="11">安全要求提高（后台 / 付费）</text>
+
+  <!-- 行 5 -->
+  <rect x="30" y="400" width="900" height="60" fill="#0b0f16" stroke="#2a3446" rx="6"/>
+  <text x="46" y="435" fill="#e7ecf5" font-size="11.5" font-weight="600">渲染方式</text>
+  <text x="206" y="435" fill="#98a5bb" font-size="11">Vue SPA 客户端渲染</text>
+  <text x="426" y="435" fill="#98a5bb" font-size="11">SEO 差，首屏依赖 JS</text>
+  <text x="706" y="435" fill="#58c7c0" font-size="11">内容需要被搜索引擎收录</text>
+
+  <text x="30" y="488" fill="#98a5bb" font-size="12.5">写下触发条件，架构才不会在两年后变成没人敢动的「历史遗留」。</text>
+</svg>

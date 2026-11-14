@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 660" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6980"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#58c7c0"/>
+    </marker>
+    <style>
+      .hdr { fill: #111826; stroke: #2a3446; stroke-width: 1.5; rx: 8; }
+      .hdr-a { stroke: #f5b942; }
+      .name { fill: #e7ecf5; font-size: 14px; font-weight: 600; }
+      .desc { fill: #5c6980; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .life { stroke: #2a3446; stroke-width: 1.5; stroke-dasharray: 5 5; }
+      .fwd { stroke: #5c6980; stroke-width: 1.5; fill: none; marker-end: url(#a1); }
+      .back { stroke: #58c7c0; stroke-width: 1.5; fill: none; marker-end: url(#a2); stroke-dasharray: 4 3; }
+      .msg { fill: #98a5bb; font-size: 12px; }
+      .msg-mono { fill: #98a5bb; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .ret { fill: #58c7c0; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      .step { fill: #0b0f16; stroke: #f5b942; }
+      .step-t { fill: #f5b942; font-size: 11px; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="660" fill="#0d131e"/>
+
+  <!-- 参与者 -->
+  <g>
+    <rect class="hdr" x="20" y="20" width="140" height="54"/>
+    <text class="name" x="90" y="43" text-anchor="middle">浏览器</text>
+    <text class="desc" x="90" y="61" text-anchor="middle">fetch /api/v1</text>
+
+    <rect class="hdr hdr-a" x="200" y="20" width="150" height="54"/>
+    <text class="name" x="275" y="43" text-anchor="middle">中间件链</text>
+    <text class="desc" x="275" y="61" text-anchor="middle">5 层</text>
+
+    <rect class="hdr" x="390" y="20" width="140" height="54"/>
+    <text class="name" x="460" y="43" text-anchor="middle">Handler</text>
+    <text class="desc" x="460" y="61" text-anchor="middle">参数与响应</text>
+
+    <rect class="hdr" x="570" y="20" width="140" height="54"/>
+    <text class="name" x="640" y="43" text-anchor="middle">Service</text>
+    <text class="desc" x="640" y="61" text-anchor="middle">业务规则</text>
+
+    <rect class="hdr" x="750" y="20" width="140" height="54"/>
+    <text class="name" x="820" y="43" text-anchor="middle">Repository</text>
+    <text class="desc" x="820" y="61" text-anchor="middle">GORM 查询</text>
+
+    <rect class="hdr" x="920" y="20" width="60" height="54"/>
+    <text class="name" x="950" y="43" text-anchor="middle">MySQL</text>
+    <text class="desc" x="950" y="61" text-anchor="middle">8.0</text>
+  </g>
+
+  <!-- 生命线 -->
+  <line class="life" x1="90" y1="74" x2="90" y2="600"/>
+  <line class="life" x1="275" y1="74" x2="275" y2="600"/>
+  <line class="life" x1="460" y1="74" x2="460" y2="600"/>
+  <line class="life" x1="640" y1="74" x2="640" y2="600"/>
+  <line class="life" x1="820" y1="74" x2="820" y2="600"/>
+  <line class="life" x1="950" y1="74" x2="950" y2="600"/>
+
+  <!-- 1 请求进入 -->
+  <path class="fwd" d="M90,120 L273,120"/>
+  <text class="msg" x="100" y="112">GET /api/v1/articles?page=1&amp;page_size=10</text>
+
+  <!-- 2 中间件 -->
+  <path class="fwd" d="M275,175 L458,175"/>
+  <text class="msg" x="285" y="167">RequestID → 日志 → Recover → CORS</text>
+  <text class="msg-mono" x="285" y="193">ctx 里放入 request_id</text>
+
+  <!-- 3 Handler 绑定参数 -->
+  <path class="fwd" d="M460,235 L638,235"/>
+  <text class="msg" x="470" y="227">ShouldBindQuery → ListQuery</text>
+  <text class="msg-mono" x="470" y="253">page 默认 1，page_size 上限 50</text>
+
+  <!-- 4 Service -->
+  <path class="fwd" d="M640,295 L818,295"/>
+  <text class="msg" x="650" y="287">repo.List(ctx, query)</text>
+
+  <!-- 5 SQL -->
+  <path class="fwd" d="M820,350 L948,350"/>
+  <text class="msg-mono" x="700" y="342">SELECT ... WHERE status=1 ORDER BY is_top DESC, published_at DESC LIMIT 20</text>
+
+  <!-- 6 返回集合 -->
+  <path class="back" d="M948,405 L822,405"/>
+  <text class="ret" x="700" y="397">rows → []Article</text>
+
+  <!-- 7 Service 组装 -->
+  <path class="back" d="M818,455 L642,455"/>
+  <text class="ret" x="650" y="447">{list, total, page}</text>
+
+  <!-- 8 Handler 包装 -->
+  <path class="back" d="M638,505 L462,505"/>
+  <text class="ret" x="470" y="497">response.OK(c, data)</text>
+
+  <!-- 9 响应 -->
+  <path class="back" d="M458,560 L92,560"/>
+  <text class="ret" x="130" y="552">200 {"code":0,"data":{...}}</text>
+
+  <!-- 步骤序号 -->
+  <circle class="step" cx="185" cy="120" r="11"/>
+  <text class="step-t" x="185" y="124" text-anchor="middle">1</text>
+  <circle class="step" cx="370" cy="175" r="11"/>
+  <text class="step-t" x="370" y="179" text-anchor="middle">2</text>
+  <circle class="step" cx="550" cy="235" r="11"/>
+  <text class="step-t" x="550" y="239" text-anchor="middle">3</text>
+  <circle class="step" cx="730" cy="295" r="11"/>
+  <text class="step-t" x="730" y="299" text-anchor="middle">4</text>
+  <circle class="step" cx="884" cy="350" r="8"/>
+  <circle class="step" cx="884" cy="405" r="8"/>
+  <circle class="step" cx="730" cy="455" r="8"/>
+  <circle class="step" cx="550" cy="505" r="8"/>
+  <circle class="step" cx="275" cy="560" r="8"/>
+
+  <text class="msg" x="20" y="630">实线是请求向下传递，虚线是数据向上返回。Handler 只做参数与响应，SQL 只出现在 Repository。</text>
+</svg>

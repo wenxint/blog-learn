@@ -22,6 +22,7 @@
 """
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -110,6 +111,11 @@ TAG_SLUGS = {
     "踩坑": "pitfall",
     "踩坑记录": "pitfall",
     "性能": "performance",
+    "安全": "security",
+    "测试": "test",
+    "复盘": "retro",
+    "上传": "upload",
+    "运维": "ops",
     "Gin": "gin",
     "GORM": "gorm",
     "Nginx": "nginx",
@@ -123,21 +129,34 @@ TAG_SLUGS = {
 def tag_slug(name):
     if name in TAG_SLUGS:
         return TAG_SLUGS[name]
-    return "tag-" + format(abs(hash(name)) % 100000, "05d")
+    # 用 md5 而不是内置 hash：Python 的 hash 每个进程都会加盐，
+    # 同一标签两次导入会得到不同 slug，进而创建出重复标签。
+    return "tag-" + hashlib.md5(name.encode("utf-8")).hexdigest()[:6]
 
 
 def ensure_tag(api, name, dry):
     data = api.call("GET", "/api/v1/tags")
-    for t in data.get("list", []):
-        if t["name"] == name:
-            return t["id"]
     slug = tag_slug(name)
+    for t in data.get("list", []):
+        # 同名直接复用；slug 相同也复用（例如「踩坑」与「踩坑记录」共享 pitfall），
+        # 否则 POST 会因为 slug 唯一索引冲突返回 409。
+        if t["name"] == name or t["slug"] == slug:
+            return t["id"]
     if dry:
         print(f"    [dry-run] 将创建标签 {name} (slug={slug})")
         return 0
-    created = api.call("POST", "/api/v1/admin/tags", {"name": name, "slug": slug})
-    print(f"    + 创建标签 {name} (id={created.get('id')})")
-    return created.get("id") or 0
+    try:
+        created = api.call("POST", "/api/v1/admin/tags", {"name": name, "slug": slug})
+        print(f"    + 创建标签 {name} (id={created.get('id')})")
+        return created.get("id") or 0
+    except RuntimeError:
+        # 409 兜底：可能是并发创建，也可能是历史数据占用了同名/slug
+        data = api.call("GET", "/api/v1/tags")
+        for t in data.get("list", []):
+            if t["name"] == name or t["slug"] == slug:
+                print(f"    = 复用已有标签 {t['name']} (id={t['id']})")
+                return t["id"]
+        raise
 
 
 def existing_articles(api):
