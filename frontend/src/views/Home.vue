@@ -53,6 +53,17 @@ function syncToQuery() {
   router.replace({ path: '/', query })
 }
 
+// 文章标题统一写成「01 标题」，这里把序号和标题拆开，
+// 序号用琥珀色等宽字显示，标题保持正常排版。
+function withTitleParts(list) {
+  return (list || []).map((item) => {
+    const m = String(item.title || '').match(/^(\d{2})\s+(.+)$/)
+    return m
+      ? { ...item, chapter: m[1], displayTitle: m[2] }
+      : { ...item, chapter: '', displayTitle: item.title }
+  })
+}
+
 async function loadArticles() {
   loading.value = true
   try {
@@ -63,8 +74,10 @@ async function loadArticles() {
       category_id: categoryId.value || undefined,
       tag_id: tagId.value || undefined,
       month: month.value || undefined,
+      // 系列文章按发布时间正序：01 → 13，和阅读顺序一致
+      order: 'asc',
     })
-    articles.value = data.list || []
+    articles.value = withTitleParts(data.list)
     total.value = data.total || 0
   } finally {
     loading.value = false
@@ -196,7 +209,8 @@ onMounted(() => {
             <div class="post-main">
               <h2 class="post-title">
                 <span v-if="item.is_top === 1" class="pin">置顶</span>
-                {{ item.title }}
+                <span v-if="item.chapter" class="post-no">{{ item.chapter }}</span>
+                {{ item.displayTitle }}
               </h2>
               <p class="post-summary">{{ item.summary || '（暂无摘要）' }}</p>
 
@@ -482,6 +496,15 @@ onMounted(() => {
 
 .post-link:hover .post-day {
   color: var(--amber);
+}
+
+.post-no {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--amber);
+  margin-right: 0.5rem;
+  vertical-align: 0.125em;
 }
 
 .post-title {

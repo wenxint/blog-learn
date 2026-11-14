@@ -1,5 +1,5 @@
 ---
-title: Markdown 渲染与 XSS 防护
+title: 09 Markdown 渲染与 XSS 防护
 summary: 从 marked 到 v-html 之间必须隔一个 DOMPurify。四步管线、marked 的三个坑、highlight.js 的体积账，以及前端净化到底挡得住什么。
 category: 建站记
 tags: 前端, 安全, 踩坑记录

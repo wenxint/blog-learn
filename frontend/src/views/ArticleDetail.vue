@@ -25,6 +25,14 @@ const form = ref({ nickname: '', email: '', content: '' })
 // 用 computed：article 变化时自动重算，不用手动维护一份 html 状态。
 const contentHtml = computed(() => renderMarkdown(article.value?.content || ''))
 
+// 标题形如「04 六张表撑起一个博客」：序号单独渲染成琥珀色等宽字。
+// 没有序号的文章（例如后台随手写的）原样显示。
+const titleParts = computed(() => {
+  const raw = article.value?.title || ''
+  const m = raw.match(/^(\d{2})\s+(.+)$/)
+  return m ? { no: m[1], text: m[2] } : { no: '', text: raw }
+})
+
 async function load() {
   loading.value = true
   try {
@@ -38,8 +46,12 @@ async function load() {
         const list = await fetchArticles({
           category_id: article.value.category_id,
           page_size: 100,
+          order: 'asc',
         })
-        series.value = list.list || []
+        // 兜底再按发布时间正序排一次，保证系列目录永远是 01 → 13
+        series.value = [...(list.list || [])].sort(
+          (a, b) => new Date(a.published_at) - new Date(b.published_at),
+        )
       } catch {
         series.value = []
       }
@@ -107,7 +119,8 @@ onUnmounted(() => {
       <article class="article">
         <div class="article-head">
           <span v-if="article.is_top === 1" class="top-badge">置顶</span>
-          <h1 class="article-title">{{ article.title }}</h1>
+          <span v-if="titleParts.no" class="article-no">{{ titleParts.no }}</span>
+          <h1 class="article-title">{{ titleParts.text }}</h1>
         </div>
 
         <div class="article-meta">
@@ -242,6 +255,16 @@ onUnmounted(() => {
   background: var(--amber);
   border-radius: 0.125rem;
   padding: 0.0625rem 0.3125rem;
+}
+
+.article-no {
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  font-weight: 600;
+  color: var(--amber);
+  letter-spacing: -0.02em;
 }
 
 .article-title {
@@ -495,11 +518,6 @@ onUnmounted(() => {
   margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: series;
-}
-
-.series-list li {
-  counter-increment: series;
 }
 
 .series-link {
@@ -514,22 +532,11 @@ onUnmounted(() => {
   transition: color 0.15s ease;
 }
 
-.series-link::before {
-  content: counter(series, decimal-leading-zero);
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--ink-3);
-}
-
 .series-link:hover {
   color: var(--ink);
 }
 
 .series-link--current {
-  color: var(--amber);
-}
-
-.series-link--current::before {
   color: var(--amber);
 }
 

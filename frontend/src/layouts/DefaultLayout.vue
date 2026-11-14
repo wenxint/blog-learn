@@ -51,7 +51,7 @@ watch(
 
     <footer class="site-footer">
       <div class="container footer-inner">
-        <span class="mono-tag">youzhichong.xyz</span>
+        <span class="mono-tag">陶文鑫 · youzhichong.xyz</span>
         <span class="mono-tag">Go + Vue3 手搓</span>
         <span class="mono-tag">© 2026</span>
       </div>
@@ -70,10 +70,11 @@ watch(
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(11, 15, 22, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* 不用半透明：滚动时正文会从导航栏底下透出来，读起来很脏。
+     纯色底 + 一条细线，滚动时内容被完全挡住。 */
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .header-inner {

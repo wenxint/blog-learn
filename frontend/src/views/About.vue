@@ -2,14 +2,14 @@
 // 关于页：静态介绍。真实项目里这块内容通常从后端 /site/info 读取，
 // 我们这里先写死，等需要在线编辑时再对接。
 const stack = [
-  { name: 'Go 1.26', desc: '后端语言' },
-  { name: 'Gin', desc: 'HTTP 框架' },
-  { name: 'GORM', desc: 'ORM / 数据访问' },
-  { name: 'MySQL 8.4', desc: '关系型数据库' },
-  { name: 'JWT', desc: '无状态认证' },
-  { name: 'Vue 3', desc: '前端框架' },
-  { name: 'Vite', desc: '构建工具' },
-  { name: 'Element Plus', desc: 'UI 组件库' },
+  { name: 'Go 1.26', desc: '后端语言', url: 'https://go.dev/' },
+  { name: 'Gin', desc: 'HTTP 框架', url: 'https://gin-gonic.com/' },
+  { name: 'GORM', desc: 'ORM / 数据访问', url: 'https://gorm.io/' },
+  { name: 'MySQL 8.4', desc: '关系型数据库', url: 'https://www.mysql.com/' },
+  { name: 'JWT', desc: '无状态认证', url: 'https://jwt.io/' },
+  { name: 'Vue 3', desc: '前端框架', url: 'https://vuejs.org/' },
+  { name: 'Vite', desc: '构建工具', url: 'https://vite.dev/' },
+  { name: 'Element Plus', desc: 'UI 组件库', url: 'https://element-plus.org/' },
 ]
 
 const lessons = [
@@ -48,7 +48,7 @@ const parts = [
   <div class="container">
     <header class="page-head">
       <h1>关于</h1>
-      <p class="muted">一个边学边做的博客系统</p>
+      <p class="muted">一个边学边做的博客系统 · 作者 陶文鑫</p>
     </header>
 
     <section class="card block">
@@ -71,11 +71,23 @@ const parts = [
     <section class="card block">
       <h2>技术栈</h2>
       <div class="stack">
-        <div v-for="item in stack" :key="item.name" class="stack-item">
-          <span class="stack-name">{{ item.name }}</span>
+        <a
+          v-for="item in stack"
+          :key="item.name"
+          class="stack-item"
+          :href="item.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          :aria-label="`${item.name} 官网（新窗口打开）`"
+        >
+          <span class="stack-name">
+            {{ item.name }}
+            <span class="stack-arrow" aria-hidden="true">↗</span>
+          </span>
           <span class="muted">{{ item.desc }}</span>
-        </div>
+        </a>
       </div>
+      <p class="stack-hint muted">点击卡片访问对应技术栈官网</p>
     </section>
 
     <section class="card block">
@@ -189,6 +201,42 @@ code {
   padding: 0.75rem 0.875rem;
   border: 1px solid var(--line);
   border-radius: 0.375rem;
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.stack-item:hover,
+.stack-item:focus-visible {
+  transform: translateY(-2px) scale(1.03);
+  border-color: var(--amber);
+  background: rgba(245, 185, 66, 0.06);
+  outline: none;
+}
+
+.stack-item:focus-visible {
+  box-shadow: 0 0 0 2px var(--amber);
+}
+
+.stack-arrow {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  transition: color 0.22s ease;
+}
+
+.stack-item:hover .stack-arrow,
+.stack-item:focus-visible .stack-arrow {
+  color: var(--amber);
+}
+
+.stack-hint {
+  margin: 0.875rem 0 0;
+  font-size: 0.75rem;
 }
 
 .stack-item > span:last-child {

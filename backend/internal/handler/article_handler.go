@@ -54,6 +54,8 @@ type ListArticleQuery struct {
 	TagID      uint64 `form:"tag_id" binding:"omitempty,gte=1"`
 	// 归档页用：?month=2026-11
 	Month string `form:"month" binding:"omitempty,len=7"`
+	// 排序：asc=按发布时间正序（系列阅读顺序），不传=最新在前
+	Order string `form:"order" binding:"omitempty,oneof=asc desc"`
 }
 
 // articleRequest 是「新建/编辑文章」的请求体，给前端传的 JSON 用的。
@@ -100,6 +102,7 @@ func (h *ArticleHandler) List(c *gin.Context) {
 		PublishedMonth: q.Month,
 		Page:           q.Page,
 		PageSize:       q.PageSize,
+		OrderAsc:       q.Order == "asc",
 	})
 	if err != nil {
 		fail(c, err, "查询文章列表失败")

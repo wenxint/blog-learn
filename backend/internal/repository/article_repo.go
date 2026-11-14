@@ -34,6 +34,8 @@ type ArticleFilter struct {
 	PublishedMonth string
 	Page           int
 	PageSize       int
+	// OrderAsc 为 true 时按发布时间正序（系列文章 01→13），默认倒序（最新在前）
+	OrderAsc bool
 }
 
 // build 每次返回一个干净的链式对象。
@@ -73,6 +75,11 @@ func (r *ArticleRepository) List(f ArticleFilter) ([]model.Article, int64, error
 		return nil, 0, err
 	}
 
+	order := "is_top DESC, published_at DESC"
+	if f.OrderAsc {
+		order = "published_at ASC"
+	}
+
 	var list []model.Article
 	err := r.build(f).
 		Select("id", "title", "summary", "cover", "status", "is_top",
@@ -81,7 +88,7 @@ func (r *ArticleRepository) List(f ArticleFilter) ([]model.Article, int64, error
 		Preload("Category").
 		Preload("Author").
 		Preload("Tags").
-		Order("is_top DESC, published_at DESC").
+		Order(order).
 		Limit(f.PageSize).
 		Offset((f.Page - 1) * f.PageSize).
 		Find(&list).Error
