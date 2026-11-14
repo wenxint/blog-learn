@@ -67,76 +67,78 @@ onMounted(async () => {
 
 <style scoped>
 .page-head {
-  margin-bottom: 26px;
+  margin-bottom: 2.5rem;
 }
 
 .page-head h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--ink-2);
 }
 
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-}
-
-.year-block {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px 26px;
+  gap: 3rem;
 }
 
 .year {
-  margin: 0 0 14px;
-  font-size: 20px;
-  letter-spacing: 1px;
-  color: var(--primary);
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.5rem;
+  color: var(--amber);
+  letter-spacing: 0.02em;
 }
 
 .months {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
+/* 月份行：整行可点，hover 时轻微右移，代替卡片 */
 .month-row {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 6px;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
   border: none;
-  background: transparent;
+  border-bottom: 1px solid var(--line);
+  background: none;
   cursor: pointer;
-  border-radius: 8px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  transition: background 0.15s;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--ink-2);
+  transition: color 0.18s ease, padding-left 0.2s ease;
 }
 
 .month-row:hover {
-  background: var(--primary-soft);
-  color: var(--primary);
+  color: var(--amber);
+  padding-left: 0.5rem;
 }
 
 .month-label {
-  font-weight: 600;
-  color: var(--text);
+  font-family: var(--font-mono);
+  color: var(--ink);
 }
 
 .month-dots {
   flex: 1;
-  border-bottom: 1px dashed var(--border);
   height: 1px;
+  border-bottom: 1px dashed var(--line);
 }
 
 .month-count {
-  font-size: 13px;
-  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-3);
 }
 </style>

@@ -81,55 +81,84 @@ const lessons = [
 
 <style scoped>
 .page-head {
-  margin-bottom: 26px;
+  margin-bottom: 2.5rem;
 }
 
 .page-head h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--ink-2);
 }
 
 .block {
-  padding: 24px 28px;
-  margin-bottom: 16px;
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--line);
+  /* 覆盖 .card 带来的面板底色与边框，保持「手记」的无卡片风格 */
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-radius: 0;
+}
+
+.block:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .block h2 {
-  margin: 0 0 12px;
-  font-size: 17px;
+  margin: 0 0 0.875rem;
+  font-size: 1.125rem;
 }
 
 .block p {
-  margin: 0 0 10px;
-  color: var(--text-secondary);
-  line-height: 1.8;
+  max-width: 46rem;
+  margin: 0 0 0.75rem;
+  color: var(--ink-2);
+  line-height: 1.85;
 }
 
 code {
-  background: #f2f4f8;
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  color: #e9c98d;
 }
 
 .stack {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
 }
 
 .stack-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  gap: 0.125rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 0.375rem;
+}
+
+.stack-item > span:last-child {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--ink-3);
 }
 
 .stack-name {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
   font-weight: 600;
-  font-size: 14px;
+  color: var(--ink);
 }
 
 .lessons {
@@ -137,21 +166,31 @@ code {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 6px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.5rem 1.5rem;
 }
 
 .lessons li {
-  font-size: 14px;
-  color: var(--text-secondary);
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--ink-2);
 }
 
 .index {
-  color: var(--primary);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  padding-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  padding-top: 0.15rem;
+}
+
+@media (max-width: 48rem) {
+  .stack {
+    grid-template-columns: 1fr;
+  }
+
+  .lessons {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

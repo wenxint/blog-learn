@@ -36,6 +36,9 @@ export default defineConfig({
 
   server: {
     port: 5173,
+    // 显式绑 IPv4。默认值是 'localhost'，在 macOS 上 Node 会优先解析成 ::1，
+    // 导致浏览器用 127.0.0.1:5173 打不开（有些工具/脚本只认 IPv4）。
+    host: '127.0.0.1',
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8090',
@@ -51,5 +54,11 @@ export default defineConfig({
   build: {
     // 关掉 500KB 的警告阈值噪音（按需引入后主包已显著变小）
     chunkSizeWarningLimit: 600,
+
+    // CSS 压缩目标。默认目标下 esbuild 会把 @media (max-width: 768px)
+    // 改写成 Media Queries Level 4 的 range 语法 @media (width<=768px)，
+    // 旧版 Safari（<16.4）和旧 Android WebView 不认，会让移动端样式整个失效。
+    // 这里显式降级目标，保留传统的 max-width 写法。
+    cssTarget: ['chrome87', 'safari13', 'firefox78', 'edge88'],
   },
 })

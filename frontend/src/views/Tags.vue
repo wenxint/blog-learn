@@ -60,45 +60,48 @@ onMounted(async () => {
 
 <style scoped>
 .page-head {
-  margin-bottom: 26px;
+  margin-bottom: 2.5rem;
 }
 
 .page-head h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--ink-2);
 }
 
 .tag-cloud {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 0.5rem 0.75rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--line);
 }
 
 .tag-chip {
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text-secondary);
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--ink-2);
   border-radius: 999px;
-  padding: 6px 16px;
+  padding: 0.375rem 0.875rem;
   cursor: pointer;
-  transition: all 0.15s;
-  line-height: 1.4;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  transition: border-color 0.18s ease, color 0.18s ease;
 }
 
 .tag-chip:hover {
-  background: var(--primary-soft);
-  border-color: #b9c8ff;
-  color: var(--primary);
-  transform: translateY(-1px);
+  border-color: var(--amber);
+  color: var(--amber);
 }
 
 .count {
-  font-size: 12px;
-  opacity: 0.55;
-  margin-left: 2px;
+  font-size: 0.6875rem;
+  opacity: 0.5;
+  margin-left: 0.25rem;
 }
 </style>

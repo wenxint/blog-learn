@@ -1,12 +1,13 @@
 <script setup>
 // 文章详情页：正文 + 评论
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createComment, fetchArticleDetail, fetchComments } from '../api/article'
 import { formatDate } from '../utils/format'
 import { renderMarkdown } from '../utils/markdown'
 // 代码高亮主题（github 风格浅色）
-import 'highlight.js/styles/github.css'
+// 深色主题的高亮样式，和页面底色配套（浅色主题会让关键字在黑底上发暗）
+import 'highlight.js/styles/github-dark.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -60,10 +61,29 @@ async function submitComment() {
   }
 }
 
-onMounted(load)
+// 阅读进度：随滚动更新顶部那条琥珀色细线。
+// 只服务于「这篇有多长、读到哪了」，不承载装饰功能。
+const progress = ref(0)
+
+function updateProgress() {
+  const el = document.documentElement
+  const max = el.scrollHeight - el.clientHeight
+  progress.value = max > 0 ? Math.min(1, el.scrollTop / max) : 0
+}
+
+onMounted(() => {
+  load()
+  updateProgress()
+  window.addEventListener('scroll', updateProgress, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateProgress)
+})
 </script>
 
 <template>
+  <div class="read-progress" :style="{ transform: `scaleX(${progress})` }" aria-hidden="true"></div>
   <div class="container">
     <ElSkeleton v-if="loading" :rows="6" animated />
 
@@ -76,9 +96,7 @@ onMounted(load)
 
         <div class="article-meta">
           <span v-if="article.author" class="author">{{ article.author.nickname }}</span>
-          <span class="dot">·</span>
           <span>{{ formatDate(article.published_at) }}</span>
-          <span class="dot">·</span>
           <span>{{ article.view_count }} 次阅读</span>
           <span v-if="article.category" class="meta-category">{{ article.category.name }}</span>
         </div>
@@ -152,282 +170,362 @@ onMounted(load)
 </template>
 
 <style scoped>
+.read-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 60;
+  background: var(--amber);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.1s linear;
+}
+
 .article {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 32px 36px;
+  max-width: var(--measure);
+  margin: 0 auto;
 }
 
 .article-head {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .top-badge {
-  font-size: 11px;
-  color: #fff;
-  background: #ff7a45;
-  border-radius: 4px;
-  padding: 2px 7px;
   flex-shrink: 0;
+  margin-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--amber);
+  border-radius: 0.125rem;
+  padding: 0.0625rem 0.3125rem;
 }
 
 .article-title {
   margin: 0;
-  font-size: 28px;
-  line-height: 1.35;
-  letter-spacing: -0.4px;
+  font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+  line-height: 1.24;
+  letter-spacing: -0.02em;
 }
 
 .article-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  font-size: 13px;
-  color: var(--text-tertiary);
+  gap: 0.75rem;
   flex-wrap: wrap;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--ink-3);
 }
 
 .author {
-  color: var(--text-secondary);
-  font-weight: 600;
+  color: var(--ink-2);
 }
 
 .meta-category {
-  color: var(--primary);
-  background: var(--primary-soft);
-  border-radius: 4px;
-  padding: 2px 8px;
   margin-left: auto;
+  color: var(--amber);
+}
+
+.dot {
+  opacity: 0.4;
 }
 
 .article-body {
-  margin: 26px 0;
+  margin: 2.25rem 0;
 }
 
+/* 正文用衬线字：三千字的技术文需要可读性，不是展示性 */
 .markdown-body {
-  font-size: 15.5px;
-  line-height: 1.85;
-  color: var(--text);
-  word-break: break-word;
+  font-size: 1.0625rem;
+  line-height: 1.9;
+  color: #d3dae6;
 }
 
 .markdown-body :deep(h1),
 .markdown-body :deep(h2),
 .markdown-body :deep(h3) {
-  margin: 1.6em 0 0.6em;
-  line-height: 1.4;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--ink);
+  margin: 2.25em 0 0.7em;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
 }
 
 .markdown-body :deep(h1) {
-  font-size: 24px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
+  font-size: 1.625rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .markdown-body :deep(h2) {
-  font-size: 20px;
+  font-size: 1.375rem;
 }
 
 .markdown-body :deep(h3) {
-  font-size: 17px;
+  font-size: 1.125rem;
 }
 
 .markdown-body :deep(p) {
-  margin: 0 0 1em;
+  margin: 0 0 1.25em;
 }
 
 .markdown-body :deep(ul),
 .markdown-body :deep(ol) {
-  padding-left: 1.4em;
-  margin: 0 0 1em;
+  margin: 0 0 1.25em;
+  padding-left: 1.5em;
 }
 
 .markdown-body :deep(li) {
-  margin: 0.25em 0;
+  margin: 0.35em 0;
+}
+
+.markdown-body :deep(li)::marker {
+  color: var(--ink-3);
 }
 
 .markdown-body :deep(a) {
-  color: var(--primary);
-  text-decoration: none;
+  color: var(--amber);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(245, 185, 66, 0.35);
 }
 
 .markdown-body :deep(a:hover) {
-  text-decoration: underline;
+  text-decoration-color: var(--amber);
 }
 
 .markdown-body :deep(blockquote) {
-  margin: 1em 0;
-  padding: 10px 16px;
-  border-left: 3px solid #c9d3ea;
-  background: #f8f9fc;
-  color: var(--text-secondary);
-  border-radius: 0 8px 8px 0;
+  margin: 1.5em 0;
+  padding: 0.25em 0 0.25em 1.25em;
+  border-left: 2px solid var(--amber);
+  color: var(--ink-2);
+  font-style: italic;
 }
 
 .markdown-body :deep(code) {
-  background: #f2f4f8;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 0.9em;
-  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  color: #e9c98d;
 }
 
 .markdown-body :deep(pre) {
-  margin: 1.2em 0;
-  padding: 16px 18px;
-  background: #f8f9fc;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  margin: 1.5em 0;
+  padding: 1.25rem 1.375rem;
+  background: #0d131e;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.625rem;
   overflow-x: auto;
+  line-height: 1.7;
 }
 
 .markdown-body :deep(pre code) {
-  background: transparent;
+  background: none;
+  border: none;
   padding: 0;
-  font-size: 13.5px;
-  line-height: 1.65;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: #ccd6e5;
 }
 
 .markdown-body :deep(table) {
   width: 100%;
   border-collapse: collapse;
-  margin: 1em 0;
-  font-size: 14px;
+  margin: 1.5em 0;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
 }
 
 .markdown-body :deep(th),
 .markdown-body :deep(td) {
-  border: 1px solid var(--border);
-  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  padding: 0.625rem 0.75rem;
   text-align: left;
 }
 
 .markdown-body :deep(th) {
-  background: #f8f9fc;
+  color: var(--ink);
   font-weight: 600;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .markdown-body :deep(img) {
-  max-width: 100%;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .markdown-body :deep(hr) {
   border: none;
-  border-top: 1px solid var(--border);
-  margin: 2em 0;
+  border-top: 1px solid var(--line);
+  margin: 2.5em 0;
 }
 
 .article-tags {
   display: flex;
-  gap: 8px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
 }
 
+/* ───────── 评论 ───────── */
 .comments {
-  margin-top: 30px;
+  max-width: var(--measure);
+  margin: 3rem auto 0;
 }
 
 .comments-title {
-  margin: 0 0 16px;
-  font-size: 18px;
+  margin: 0 0 1.25rem;
+  font-size: 1.125rem;
 }
 
 .count {
-  color: var(--text-tertiary);
+  color: var(--ink-3);
   font-weight: 400;
 }
 
 .comment-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
 }
 
 .comment {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .comment-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .avatar {
-  width: 26px;
-  height: 26px;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
-  background: var(--primary-soft);
-  color: var(--primary);
+  background: var(--amber-soft);
+  color: var(--amber);
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
 .nickname {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
   font-weight: 600;
-  font-size: 14px;
+  color: var(--ink);
 }
 
 .comment-time {
-  color: var(--text-tertiary);
-  font-size: 12px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--ink-3);
 }
 
 .comment-content {
-  margin: 8px 0 0;
-  color: var(--text-secondary);
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink-2);
   white-space: pre-wrap;
 }
 
 .replies {
-  margin-top: 12px;
-  padding-left: 14px;
-  border-left: 2px solid var(--border);
+  margin-top: 0.875rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--line);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.875rem;
+}
+
+/* 回复没有独立头部容器，用 flex 让昵称和时间分行对齐 */
+.reply {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+}
+
+.reply .comment-time {
+  margin-left: 0;
 }
 
 .reply .comment-content {
-  margin-top: 4px;
+  width: 100%;
+  margin-top: 0.25rem;
 }
 
 .comment-form {
-  margin-top: 22px;
-  padding: 20px;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
 .comment-form h4 {
-  margin: 0 0 14px;
-  font-size: 15px;
+  margin: 0 0 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--ink);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .form-actions {
-  margin-top: 12px;
   display: flex;
   justify-content: flex-end;
+  margin-top: 0.875rem;
 }
 
-.dot {
-  opacity: 0.5;
+@media (max-width: 48rem) {
+  .markdown-body {
+    font-size: 1rem;
+    line-height: 1.85;
+  }
+
+  .markdown-body :deep(table) {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .meta-category {
+    margin-left: 0;
+  }
+
+  .comment-form {
+    padding: 1.125rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .comments {
+    margin-top: 2rem;
+  }
 }
 </style>

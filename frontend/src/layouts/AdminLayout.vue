@@ -34,7 +34,7 @@ onMounted(() => {
   <div class="admin">
     <aside class="sidebar">
       <div class="brand">
-        <span class="brand-mark">B</span>
+        <span class="brand-mark">~/</span>
         <span>博客后台</span>
       </div>
 
@@ -84,81 +84,87 @@ onMounted(() => {
 .admin {
   display: flex;
   min-height: 100vh;
-  background: #f5f6fa;
+  background: var(--bg);
 }
 
 .sidebar {
-  width: 208px;
+  width: 13rem;
   flex-shrink: 0;
-  background: #1e2130;
-  color: #c8ccd8;
   display: flex;
   flex-direction: column;
-  padding: 20px 14px;
+  padding: 1.5rem 1rem;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #fff;
-  font-weight: 600;
-  padding: 0 8px 20px;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--ink);
 }
 
 .brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: linear-gradient(135deg, #4f7cff, #7b5cff);
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.375rem;
+  background: var(--amber);
+  color: var(--bg);
   display: grid;
   place-items: center;
-  font-size: 15px;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .menu {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #c8ccd8;
-  font-size: 14px;
-  transition: all 0.15s;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  transition: background 0.18s ease, color 0.18s ease;
 }
 
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
 }
 
 .menu-item--active {
-  background: rgba(79, 124, 255, 0.18);
-  color: #fff;
+  background: var(--amber-soft);
+  color: var(--amber);
 }
 
 .menu-item--back {
-  margin-top: 16px;
-  color: #8b91a3;
-  font-size: 13px;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--ink-3);
 }
 
 .icon {
-  font-size: 15px;
+  font-size: 0.875rem;
 }
 
 .sidebar-foot {
   margin-top: auto;
-  padding: 0 12px;
-  font-size: 12px;
-  color: #5f6577;
+  padding: 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--ink-3);
 }
 
 .main {
@@ -169,61 +175,151 @@ onMounted(() => {
 }
 
 .topbar {
-  height: 62px;
-  background: #fff;
-  border-bottom: 1px solid #e8eaef;
+  height: 3.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 26px;
+  padding: 0 1.75rem;
+  background: rgba(11, 15, 22, 0.6);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
 }
 
 .page-title {
   margin: 0;
-  font-size: 17px;
+  font-size: 1rem;
 }
 
 .user {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
+  gap: 0.625rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
-  background: var(--primary-soft);
-  color: var(--primary);
   display: grid;
   place-items: center;
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-family: var(--font-mono);
   font-weight: 600;
 }
 
 .name {
-  color: var(--text);
+  color: var(--ink);
   font-weight: 600;
 }
 
 .role-tag {
-  font-size: 11px;
-  padding: 1px 7px;
-  border-radius: 4px;
+  padding: 0.0625rem 0.4375rem;
+  border-radius: 0.1875rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
 }
 
 .role-tag--admin {
-  background: #fff1e6;
-  color: #d46b08;
+  background: var(--amber-soft);
+  color: var(--amber);
 }
 
 .role-tag--author {
-  background: #eef2ff;
-  color: #4f7cff;
+  background: rgba(88, 199, 192, 0.12);
+  color: var(--cyan);
 }
 
 .content {
-  padding: 22px 26px 40px;
   flex: 1;
+  padding: 1.5rem 1.75rem 3rem;
+}
+
+/* ───────── 窄屏：侧栏收成顶部横条 ───────── */
+@media (max-width: 48rem) {
+  .admin {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+  }
+
+  .brand {
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    flex-shrink: 0;
+  }
+
+  .brand > span:last-child {
+    display: none;
+  }
+
+  .menu {
+    flex-direction: row;
+    gap: 0.375rem;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .menu-item {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .menu-item--back {
+    margin-top: 0;
+    border: 1px solid var(--line);
+  }
+
+  .sidebar-foot {
+    display: none;
+  }
+
+  .topbar {
+    height: auto;
+    padding: 0.625rem 0.875rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: 0.9375rem;
+  }
+
+  .user {
+    min-width: 0;
+  }
+
+  .name {
+    max-width: 5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .content {
+    padding: 0.875rem 0.75rem 2rem;
+  }
 }
 </style>

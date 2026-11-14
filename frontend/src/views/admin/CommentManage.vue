@@ -151,11 +151,11 @@ onMounted(load)
 .reply-tag {
   display: block;
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--ink-3);
 }
 
 .link {
-  color: var(--primary);
+  color: var(--amber);
   text-decoration: none;
   font-size: 13px;
 }
@@ -164,5 +164,36 @@ onMounted(load)
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  /* 状态切换按钮多时允许横向滑动，不换行挤压 */
+  .toolbar :deep(.el-radio-group) {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .toolbar :deep(.el-radio-group)::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pager {
+    justify-content: center;
+  }
+
+  /* 表格给一个最小宽度，让 Element Plus 内部产生横向滚动，
+     而不是把列压缩到互相重叠 */
+  .page :deep(.el-table) {
+    font-size: 0.8125rem;
+    min-width: 42rem;
+  }
 }
 </style>

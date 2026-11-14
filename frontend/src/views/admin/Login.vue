@@ -8,6 +8,9 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
+// 生产构建里不显示默认账号提示，避免把后台入口信息暴露出去
+const isDev = import.meta.env.DEV
+
 const form = ref({ username: 'admin', password: '' })
 const loading = ref(false)
 
@@ -37,7 +40,7 @@ async function handleSubmit() {
   <div class="login-page">
     <div class="login-card">
       <div class="brand">
-        <span class="mark">B</span>
+        <span class="mark">~/</span>
         <h1>博客后台</h1>
       </div>
       <p class="muted">登录后可以管理文章、审核评论</p>
@@ -86,63 +89,71 @@ async function handleSubmit() {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: linear-gradient(160deg, #eef2ff 0%, #f7f8fb 40%, #f5f6fa 100%);
-  padding: 20px;
+  padding: 1.5rem;
+  background: var(--bg);
 }
 
 .login-card {
   width: 100%;
-  max-width: 380px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 34px 32px 26px;
-  box-shadow: 0 12px 40px rgba(23, 43, 99, 0.08);
+  max-width: 24rem;
+  padding: 2.25rem 2rem 1.75rem;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.75rem;
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.45);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 0.625rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
 }
 
 .mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #4f7cff, #7b5cff);
-  color: #fff;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
   display: grid;
   place-items: center;
+  background: var(--amber);
+  color: var(--bg);
+  font-family: var(--font-mono);
   font-weight: 700;
 }
 
 h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .submit {
   width: 100%;
-  margin-top: 6px;
+  margin-top: 0.375rem;
 }
 
 .hint {
-  margin-top: 16px;
+  margin-top: 1rem;
   text-align: center;
 }
 
 .back {
   display: block;
-  margin-top: 14px;
+  margin-top: 0.875rem;
   text-align: center;
-  font-size: 13px;
-  color: var(--text-tertiary);
-  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-3);
 }
 
 .back:hover {
-  color: var(--primary);
+  color: var(--amber);
+}
+
+@media (max-width: 30rem) {
+  .login-card {
+    padding: 1.75rem 1.25rem 1.25rem;
+  }
 }
 </style>

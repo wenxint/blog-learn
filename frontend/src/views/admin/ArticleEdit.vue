@@ -235,7 +235,7 @@ onMounted(async () => {
 
 .editor {
   background: #fff;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 18px;
   display: flex;
@@ -263,7 +263,7 @@ onMounted(async () => {
 .preview {
   min-height: 200px;
   padding: 4px 6px;
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--line);
   border-radius: 8px;
   font-size: 15px;
   line-height: 1.8;
@@ -277,7 +277,7 @@ onMounted(async () => {
 
 .side-block {
   background: #fff;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 16px;
 }
@@ -299,7 +299,7 @@ onMounted(async () => {
 
 .cover-empty {
   height: 90px;
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--line);
   border-radius: 8px;
   display: grid;
   place-items: center;
@@ -325,7 +325,7 @@ onMounted(async () => {
 
 .markdown-body :deep(pre) {
   background: #f8f9fc;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px;
   overflow-x: auto;
@@ -348,7 +348,7 @@ onMounted(async () => {
   padding: 8px 14px;
   border-left: 3px solid #c9d3ea;
   background: #f8f9fc;
-  color: var(--text-secondary);
+  color: var(--ink-2);
 }
 
 .markdown-body :deep(table) {
@@ -358,7 +358,51 @@ onMounted(async () => {
 
 .markdown-body :deep(th),
 .markdown-body :deep(td) {
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   padding: 7px 10px;
+}
+
+/* ───────── 窄屏：编辑区与属性面板改单列 ───────── */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .editor {
+    padding: 14px;
+  }
+
+  .title-input :deep(input) {
+    font-size: 16px;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .content-input :deep(textarea) {
+    font-size: 13px;
+  }
+
+  .side-block {
+    padding: 14px;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .actions :deep(.el-button) {
+    flex: 1;
+  }
+
+  /* Markdown 预览里的宽表格同样横向滚动 */
+  .markdown-body :deep(table) {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 }
 </style>

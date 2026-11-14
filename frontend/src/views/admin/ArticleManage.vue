@@ -183,4 +183,46 @@ onMounted(load)
   justify-content: flex-end;
   margin-top: 16px;
 }
+
+/* ───────── 窄屏 ───────── */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  /* 覆盖模板里的内联 width: 200px / 130px */
+  .filters :deep(.el-input),
+  .filters :deep(.el-select) {
+    width: 100% !important;
+  }
+
+  .filters :deep(.el-button) {
+    width: 100%;
+  }
+
+  /* 「新建文章」按钮单独占满一行 */
+  .toolbar > :deep(.el-button) {
+    width: 100%;
+  }
+
+  .pager {
+    justify-content: center;
+  }
+
+  /* 表格横向滚动，避免列被压缩到不可读 */
+  /* 表格给一个最小宽度，让 Element Plus 内部产生横向滚动，
+     而不是把列压缩到互相重叠 */
+  .page :deep(.el-table) {
+    font-size: 0.8125rem;
+    min-width: 42rem;
+  }
+}
 </style>
