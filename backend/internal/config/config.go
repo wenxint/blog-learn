@@ -86,25 +86,40 @@ func (d DB) SafeDSN() string {
 		d.User, d.Host, d.Port, d.Name, d.Charset)
 }
 
-// Load 读取 .env（如果存在）并组装 Config。
+// Load 读取配置文件（默认 .env）并组装 Config。
 // 返回值 (*Config, error) 是一对：成功时第一份是配置指针、第二份是 nil；
 // 失败时第一份是 nil、第二份是错误。调用方必须看第二份。
 //
-// 已存在的操作系统环境变量优先级高于 .env，方便临时覆盖：
+// 配置文件路径默认是当前工作目录的 .env，可用 ENV_FILE 指定别的文件：
+//
+//	ENV_FILE=.env.prod ./blog-server          # 本地用生产配置试跑
+//	ENV_FILE=/etc/blog/blog.env ./blog-server # 配置与代码目录分离
+//
+// 已存在的操作系统环境变量优先级高于配置文件，方便临时覆盖：
 //
 //	DB_PASSWORD=wrong go run ./cmd/server
 func Load() (*Config, error) {
+	// 先看有没有显式指定 ENV_FILE。区分「没设」和「设了」很重要：
+	// 没设时默认 .env，文件不存在就静默跳过（生产常直接注入环境变量）；
+	// 显式设了却找不到文件，必须报错——否则会误以为加载了生产配置，
+	// 实际却用了默认值，这类错误上线后极难发现。
+	envFile, explicit := os.LookupEnv("ENV_FILE")
+	if !explicit {
+		envFile = ".env"
+	}
+
 	// os.Stat 问操作系统这个路径在不在。
 	// 它返回两个值：文件信息，以及错误。前面的 _ 表示文件信息用不到，丢掉。
 	// err == nil 才表示「文件存在并且能访问」。
-	// .env 不存在不算错误：生产环境通常不放这个文件，直接用系统环境变量。
-	if _, err := os.Stat(".env"); err == nil {
+	if _, err := os.Stat(envFile); err == nil {
 		// 文件在，才真正解析。Load 会把 APP_PORT=8090 这类行写进环境变量。
 		// 解析失败（文件坏了、没权限）才算启动失败：return nil, 错误。
 		// fmt.Errorf 的 %w 会把原始错误包进去，外面还能用 errors.Is 认出来。
-		if err := godotenv.Load(".env"); err != nil {
-			return nil, fmt.Errorf("加载 .env 失败: %w", err)
+		if err := godotenv.Load(envFile); err != nil {
+			return nil, fmt.Errorf("加载 %s 失败: %w", envFile, err)
 		}
+	} else if explicit {
+		return nil, fmt.Errorf("ENV_FILE 指定的配置文件不存在: %s", envFile)
 	}
 
 	// &Config{...} 在堆上造一份 Config，得到它的指针。
