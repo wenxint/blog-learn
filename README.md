@@ -8,6 +8,10 @@
 - 接口文档：[docs/02-接口文档.md](docs/02-接口文档.md)
 - 学习路线（20 课进度与要点）：[docs/01-学习路线图.md](docs/01-学习路线图.md)
 - 部署指南：[docs/03-部署.md](docs/03-部署.md)
+- 上线清单（youzhichong.xyz）：[docs/04-上线清单-youzhichong.xyz.md](docs/04-上线清单-youzhichong.xyz.md)
+- 上线实录（2026-11-14，含踩坑记录）：[docs/05-上线实录-2026-11-14.md](docs/05-上线实录-2026-11-14.md)
+- 自助部署手册（无 AI 辅助）：[docs/06-自助部署手册.md](docs/06-自助部署手册.md)
+- 前端视觉重构（设计 token、rem 适配、实现要点）：[docs/07-前端视觉重构.md](docs/07-前端视觉重构.md)
 - 笔记目录：[docs/notes/README.md](docs/notes/README.md)
   - [踩坑记录](docs/notes/踩坑记录.md) · [后端速查](docs/notes/后端速查.md) · [前端速查](docs/notes/前端速查.md) · [自测题](docs/notes/自测题.md)
 
@@ -49,11 +53,14 @@ cd backend
 cp .env.example .env      # 然后按本机情况改 DB_PASSWORD / JWT_SECRET
 # JWT_SECRET 用 openssl rand -hex 32 生成
 
-mysql -ublog -p blog < migrations/001_init.sql    # 建表
-mysql -ublog -p blog < migrations/002_seed.sql    # 文章/分类/标签种子
-mysql -ublog -p blog < migrations/003_add_article_tags_and_comments.sql
-mysql -ublog -p blog < migrations/004_seed_article_tags.sql
-mysql -ublog -p blog < migrations/005_seed_comments.sql
+# 必须加 --default-character-set=utf8mb4：
+# LANG 为空的环境（很多服务器、容器、CI 都是）里 mysql 客户端默认用 latin1，
+# UTF-8 的种子文件会被双重编码存进库，页面显示成 "Go ä»Žé›¶å¼€å§‹" 这种乱码。
+mysql -ublog -p --default-character-set=utf8mb4 blog < migrations/001_init.sql    # 建表
+mysql -ublog -p --default-character-set=utf8mb4 blog < migrations/002_seed.sql    # 文章/分类/标签种子
+mysql -ublog -p --default-character-set=utf8mb4 blog < migrations/003_add_article_tags_and_comments.sql
+mysql -ublog -p --default-character-set=utf8mb4 blog < migrations/004_seed_article_tags.sql
+mysql -ublog -p --default-character-set=utf8mb4 blog < migrations/005_seed_comments.sql
 ```
 
 ### 3. 启动后端（:8090）
