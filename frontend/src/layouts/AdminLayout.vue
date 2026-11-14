@@ -238,6 +238,7 @@ onMounted(() => {
 
 .content {
   flex: 1;
+  min-width: 0;
   padding: 1.5rem 1.75rem 3rem;
 }
 
@@ -247,6 +248,9 @@ onMounted(() => {
   border: 1px solid var(--line);
   border-radius: 0.75rem;
   padding: 1rem 1.125rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* ───────── 窄屏：侧栏收成顶部横条 ───────── */
@@ -332,6 +336,10 @@ onMounted(() => {
 
   .content {
     padding: 0.875rem 0.75rem 2rem;
+  }
+
+  .content :deep(.page) {
+    padding: 0.75rem;
   }
 }
 </style>
