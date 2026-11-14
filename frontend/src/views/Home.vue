@@ -74,8 +74,8 @@ async function loadArticles() {
       category_id: categoryId.value || undefined,
       tag_id: tagId.value || undefined,
       month: month.value || undefined,
-      // 系列文章按发布时间正序：01 → 13，和阅读顺序一致
-      order: 'asc',
+      // 「全部」按时间倒序（新文章在前）；选了具体分类（建站记）时按发布时间正序 01→13
+      order: categoryId.value ? 'asc' : 'desc',
     })
     articles.value = withTitleParts(data.list)
     total.value = data.total || 0

@@ -157,6 +157,15 @@ onMounted(load)
   flex-wrap: wrap;
 }
 
+/* 表格里 link 按钮的主色在暗色背景上偏灰，显式提亮，保证「编辑」看得清 */
+:deep(.el-button.is-link) {
+  color: var(--amber);
+}
+
+:deep(.el-button.is-link.el-button--danger) {
+  color: #f07575;
+}
+
 .title-cell {
   display: flex;
   align-items: center;
@@ -164,11 +173,12 @@ onMounted(load)
 }
 
 .top {
-  font-size: 11px;
-  color: #fff;
-  background: #ff7a45;
-  border-radius: 3px;
-  padding: 0 5px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--amber);
+  border-radius: 0.1875rem;
+  padding: 0 0.3125rem;
   flex-shrink: 0;
 }
 

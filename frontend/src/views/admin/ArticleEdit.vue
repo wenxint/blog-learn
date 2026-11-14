@@ -10,7 +10,7 @@ import {
 } from '../../api/admin'
 import { fetchCategories, fetchTags } from '../../api/article'
 import { renderMarkdown } from '../../utils/markdown'
-import 'highlight.js/styles/github.css'
+import 'highlight.js/styles/github-dark.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -228,19 +228,19 @@ onMounted(async () => {
 <style scoped>
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
   align-items: start;
 }
 
 .editor {
-  background: #fff;
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 18px;
+  border-radius: 0.75rem;
+  padding: 1.125rem;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .title-input :deep(input) {
@@ -262,11 +262,13 @@ onMounted(async () => {
 
 .preview {
   min-height: 200px;
-  padding: 4px 6px;
-  border: 1px dashed var(--line);
-  border-radius: 8px;
-  font-size: 15px;
-  line-height: 1.8;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: #0b0f16;
+  font-size: 0.9375rem;
+  line-height: 1.85;
+  color: var(--ink-2);
 }
 
 .side {
@@ -276,15 +278,24 @@ onMounted(async () => {
 }
 
 .side-block {
-  background: #fff;
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.side-block :deep(.el-form-item__label) {
+  color: var(--ink-2);
+  font-size: 0.75rem;
 }
 
 .side-block h4 {
-  margin: 0 0 12px;
-  font-size: 14px;
+  margin: 0 0 0.875rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--ink);
 }
 
 .cover-box {
@@ -298,12 +309,13 @@ onMounted(async () => {
 }
 
 .cover-empty {
-  height: 90px;
-  border: 1px dashed var(--line);
-  border-radius: 8px;
+  height: 96px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 0.5rem;
+  background: #0b0f16;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .cover-url {
@@ -324,18 +336,20 @@ onMounted(async () => {
 }
 
 .markdown-body :deep(pre) {
-  background: #f8f9fc;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 14px;
+  background: #0d131e;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.5rem;
+  padding: 0.875rem 1rem;
   overflow-x: auto;
 }
 
 .markdown-body :deep(code) {
-  background: #f2f4f8;
-  border-radius: 4px;
-  padding: 2px 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
   font-size: 0.9em;
+  color: #e9c98d;
 }
 
 .markdown-body :deep(pre code) {
@@ -345,9 +359,9 @@ onMounted(async () => {
 
 .markdown-body :deep(blockquote) {
   margin: 1em 0;
-  padding: 8px 14px;
-  border-left: 3px solid #c9d3ea;
-  background: #f8f9fc;
+  padding: 0.5rem 0.875rem;
+  border-left: 2px solid var(--amber);
+  background: rgba(245, 185, 66, 0.05);
   color: var(--ink-2);
 }
 

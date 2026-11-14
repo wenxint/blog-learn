@@ -82,6 +82,10 @@ onMounted(() => {
 
 <style scoped>
 .admin {
+  /* 前台有一层 fixed 的网格纹理（body::before），后台表格需要干净底色，
+     用 z-index + 实色背景把纹理挡在后面，避免格线和表格线交错。 */
+  position: relative;
+  z-index: 1;
   display: flex;
   min-height: 100vh;
   background: var(--bg);
@@ -235,6 +239,14 @@ onMounted(() => {
 .content {
   flex: 1;
   padding: 1.5rem 1.75rem 3rem;
+}
+
+/* 后台列表页统一放进一块实色面板：表格、工具栏和分页有明确边界 */
+.content :deep(.page) {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 1rem 1.125rem;
 }
 
 /* ───────── 窄屏：侧栏收成顶部横条 ───────── */
