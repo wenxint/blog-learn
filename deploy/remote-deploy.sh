@@ -39,6 +39,9 @@ rsync -az "$ROOT/backend/bin/blog-server"        "$TARGET:/opt/blog/backend/bin/
 rsync -az "$ROOT/backend/migrations/"            "$TARGET:/opt/blog/backend/migrations/"
 rsync -az "$ROOT/backend/.env.prod"              "$TARGET:/opt/blog/backend/.env.prod"
 rsync -az "$ROOT/deploy/"                        "$TARGET:/opt/blog/deploy/"
+# rsync 会保留本地文件权限；本地 umask 偏严时 SVG/PNG 会变成 600，Nginx 读不到会 403。
+# 统一放开读权限，并把 dist 交给 blog 用户。
+ssh "$TARGET" 'chown -R blog:blog /var/www/blog/dist && find /var/www/blog/dist -type d -exec chmod 755 {} + && find /var/www/blog/dist -type f -exec chmod 644 {} +'
 echo "    完成"
 
 echo
