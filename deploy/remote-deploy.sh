@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# 本地一键部署到远程服务器（需已配置 SSH 免密登录）。
+# 首次部署 / 换服务器专用（需已配置 SSH 免密登录）。
+# 日常发版请用 deploy/release.sh：它不会重跑初始化脚本和 migrations。
 #
 # 用法：
 #   ./deploy/remote-deploy.sh root@47.119.155.176          # 默认用 8080 端口（备案前）
